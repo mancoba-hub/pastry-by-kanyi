@@ -1,26 +1,121 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design tokens.
+ *
+ * A bakery's site is judged in the first second, on a phone, usually on mobile
+ * data. So: warm neutrals that make food photography look good, one confident
+ * accent (berry) for actions, and a gold for the "featured" flourish. Colour is
+ * defined once here and referenced as a semantic token everywhere else, so the
+ * palette can be retuned without touching components.
+ */
+@theme {
+  --color-background: #fffaf5;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f8efe6;
+
+  --color-foreground: #2b1b12;
+  --color-muted-foreground: #7a6555;
+
+  --color-border: #ece0d3;
+  --color-border-strong: #ddcbb8;
+
+  --color-primary: #9c2b47;
+  --color-primary-hover: #7f2239;
+  --color-primary-foreground: #fffaf5;
+
+  --color-accent: #c08a2e;
+  --color-accent-soft: #f6ecd9;
+
+  --color-success: #2f7a52;
+  --color-warning: #b8770f;
+  --color-danger: #b3261e;
+
+  --radius-card: 1.25rem;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-playfair), ui-serif, Georgia, serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    /* Reserve the scrollbar gutter so the layout does not shift between a short
+       gallery page and a long one on desktop. */
+    scrollbar-gutter: stable;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Keyboard focus stays visible; pointer focus does not draw a ring. */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Horizontal snap rail for the "latest bakes" strip on the home page.
+     Stays a single row on mobile instead of reflowing into a tall column. */
+  .snap-rail {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .snap-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .snap-rail > * {
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+}
+
+/* Skeleton shimmer for streamed Suspense fallbacks. */
+@keyframes pbk-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.animate-pbk-pulse {
+  animation: pbk-pulse 1.6s ease-in-out infinite;
 }

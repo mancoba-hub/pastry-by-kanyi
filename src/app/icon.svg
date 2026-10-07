@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="14" fill="#fffaf5" />
+  <!-- cake stand -->
+  <path d="M14 46h36" stroke="#9c2b47" stroke-width="4" stroke-linecap="round" />
+  <path d="M20 46c0-8 5.4-13 12-13s12 5 12 13" fill="#f6e0e6" stroke="#9c2b47" stroke-width="4" stroke-linejoin="round" />
+  <!-- candle flame -->
+  <path d="M32 12c3.6 4 5.4 6.6 5.4 9.2A5.4 5.4 0 0 1 32 26.8a5.4 5.4 0 0 1-5.4-5.6c0-2.6 1.8-5.2 5.4-9.2Z" fill="#c08a2e" />
+  <!-- candle -->
+  <path d="M30.4 27h3.2v6h-3.2z" fill="#9c2b47" />
+</svg>

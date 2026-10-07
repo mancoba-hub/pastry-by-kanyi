@@ -1,0 +1,347 @@
+// Pastry by Kanyi — data model
+//
+// Conventions
+//  * Money is stored as an integer number of minor units (cents) in ZAR.
+//    Never use floats for money. `formatMoney()` in src/lib/money.ts renders it.
+//  * All timestamps are UTC; presentation converts to the business time zone.
+//  * Public-facing URLs use `slug` (cakes, products). Orders use an unguessable
+//    `publicRef` so a customer can look up their own order without an account.
+//  * Counters (viewCount, likeCount) are denormalised for cheap ordering at scale.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Identity & access
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  OWNER
+  ADMIN
+  VIEWER
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(ADMIN)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  sessions  Session[]
+  auditLogs AuditLog[]
+
+  @@index([isActive, role])
+}
+
+/// Opaque server-side sessions. The cookie carries a random token; only its
+/// SHA-256 hash is persisted, so a database leak cannot be replayed as a login.
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+}
+
+// ---------------------------------------------------------------------------
+// Catalog: cakes (portfolio) and products (scones, etc.)
+// ---------------------------------------------------------------------------
+
+enum CakeStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Cake {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  description String
+  flavour     String?
+  occasion    String?
+  servings    Int?
+  priceCents  Int?
+  status      CakeStatus @default(DRAFT)
+  isFeatured  Boolean    @default(false)
+
+  /// When the bake actually happened. Drives the "latest bakes" feed so the
+  /// gallery is ordered by baking activity, not by row insertion time.
+  bakedAt     DateTime   @default(now())
+  publishedAt DateTime?
+
+  viewCount Int @default(0)
+  likeCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images     CakeImage[]
+  tags       CakeTag[]
+  orderItems OrderItem[]
+
+  @@index([status, bakedAt(sort: Desc)])
+  @@index([status, isFeatured, bakedAt(sort: Desc)])
+  @@index([status, viewCount(sort: Desc)])
+  @@index([occasion])
+}
+
+model CakeImage {
+  id          String   @id @default(cuid())
+  cakeId      String
+  storageKey  String
+  url         String
+  width       Int
+  height      Int
+  /// Tiny base64 LQIP so the grid never flashes empty boxes on a phone.
+  blurDataUrl String?
+  alt         String
+  position    Int      @default(0)
+  isCover     Boolean  @default(false)
+  byteSize    Int?
+  createdAt   DateTime @default(now())
+
+  cake Cake @relation(fields: [cakeId], references: [id], onDelete: Cascade)
+
+  @@index([cakeId, position])
+  @@index([cakeId, isCover])
+}
+
+/// Free-text labels ("wedding", "chocolate", "birthday") used for gallery facets.
+model CakeTag {
+  id     String @id @default(cuid())
+  cakeId String
+  label  String
+  slug   String
+
+  cake Cake @relation(fields: [cakeId], references: [id], onDelete: Cascade)
+
+  @@unique([cakeId, slug])
+  @@index([slug])
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  SOLD_OUT
+  ARCHIVED
+}
+
+model Product {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  name        String
+  description String
+  priceCents  Int
+  /// e.g. "per pack of 6"
+  unitLabel   String        @default("each")
+  status      ProductStatus @default(DRAFT)
+  isFeatured  Boolean       @default(false)
+
+  /// Null means "unlimited" (baked to order). A number shows a scarcity hint.
+  stockQty    Int?
+  maxPerOrder Int           @default(20)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  images     ProductImage[]
+  orderItems OrderItem[]
+
+  @@index([status, isFeatured])
+}
+
+model ProductImage {
+  id          String   @id @default(cuid())
+  productId   String
+  storageKey  String
+  url         String
+  width       Int
+  height      Int
+  blurDataUrl String?
+  alt         String
+  position    Int      @default(0)
+  isCover     Boolean  @default(false)
+  byteSize    Int?
+  createdAt   DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position])
+}
+
+// ---------------------------------------------------------------------------
+// Orders
+// ---------------------------------------------------------------------------
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  BAKING
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+  REFUNDED
+}
+
+enum PaymentMethod {
+  /// Customer pays on collection/delivery. Default while no gateway is wired in.
+  CASH_ON_DELIVERY
+  MPESA_MANUAL
+  BANK_TRANSFER
+  GATEWAY
+}
+
+enum FulfilmentType {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderChannel {
+  WEB
+  WHATSAPP
+  INSTAGRAM
+  PHONE
+  WALK_IN
+}
+
+enum OrderItemKind {
+  CAKE
+  PRODUCT
+}
+
+model Order {
+  id String @id @default(cuid())
+  /// Short, human-readable, unguessable reference shown to the customer ("PBK-8F2K9A").
+  publicRef String @unique
+
+  customerName  String
+  customerPhone String
+  customerEmail String?
+
+  fulfilment      FulfilmentType @default(PICKUP)
+  deliveryAddress String?
+  /// Requested date/time for the bake.
+  requestedFor    DateTime?
+  notes           String?
+
+  subtotalCents    Int
+  deliveryFeeCents Int @default(0)
+  totalCents       Int
+
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  paymentMethod PaymentMethod @default(CASH_ON_DELIVERY)
+  channel       OrderChannel  @default(WEB)
+
+  /// Guards against double-submits and client retries creating duplicate orders.
+  idempotencyKey String? @unique
+
+  internalNotes String?
+  confirmedAt   DateTime?
+  completedAt   DateTime?
+  cancelledAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items OrderItem[]
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([customerPhone])
+  @@index([createdAt(sort: Desc)])
+}
+
+model OrderItem {
+  id      String        @id @default(cuid())
+  orderId String
+  kind    OrderItemKind
+
+  cakeId    String?
+  productId String?
+
+  /// Snapshot of the name/price at purchase time so later catalog edits do not
+  /// rewrite order history.
+  nameSnapshot   String
+  unitPriceCents Int
+  quantity       Int
+  lineTotalCents Int
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  cake    Cake?    @relation(fields: [cakeId], references: [id], onDelete: SetNull)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+}
+
+// ---------------------------------------------------------------------------
+// Platform: async side effects, audit trail
+// ---------------------------------------------------------------------------
+
+enum OutboxStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  FAILED
+}
+
+/// Transactional outbox. Anything with a side effect (notify the baker on
+/// WhatsApp, send a receipt email) is written here in the same transaction as
+/// the order, then drained by a worker. Keeps request latency independent of
+/// third-party APIs and makes retries safe.
+model OutboxEvent {
+  id          String       @id @default(cuid())
+  type        String
+  payload     Json
+  status      OutboxStatus @default(PENDING)
+  attempts    Int          @default(0)
+  availableAt DateTime     @default(now())
+  processedAt DateTime?
+  lastError   String?
+  createdAt   DateTime     @default(now())
+
+  @@index([status, availableAt])
+  @@index([type, createdAt(sort: Desc)])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId, createdAt(sort: Desc)])
+  @@index([actorUserId, createdAt(sort: Desc)])
+}
