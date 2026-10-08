@@ -13,9 +13,9 @@ const serverSchema = z.object({
 
   DATABASE_URL: z
     .string()
-    .min(1, "DATABASE_URL is required (pooled connection string)")
-    .refine((v) => v.startsWith("postgres://") || v.startsWith("postgresql://"), {
-      message: "DATABASE_URL must be a postgres:// or postgresql:// URL",
+    .min(1, "DATABASE_URL is required (MariaDB/MySQL connection string)")
+    .refine((v) => v.startsWith("mysql://") || v.startsWith("mariadb://"), {
+      message: "DATABASE_URL must be a mysql:// or mariadb:// URL",
     }),
 
   AUTH_SECRET: z
@@ -36,9 +36,10 @@ const serverSchema = z.object({
   ORDER_RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(10),
 
   /**
-   * Max connections per process. Keep this small on serverless/pooled Postgres
-   * (the pooler multiplexes). Raise it only for a dedicated database with
-   * headroom, e.g. a self-hosted instance serving a few long-lived containers.
+   * Max connections per process. Keep this small on shared/managed database
+   * accounts with a per-user connection cap. Raise it only for a dedicated
+   * database with headroom, e.g. a self-hosted instance serving a few
+   * long-lived containers.
    */
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
 });

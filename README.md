@@ -25,11 +25,11 @@ because the gallery is the product and the business uploads constantly.
 # 1. Install
 npm install
 
-# 2. Start Postgres (or point DATABASE_URL at Neon/Supabase — see below)
+# 2. Start MariaDB (or point DATABASE_URL at your host's database — see below)
 docker compose up -d
 
 # 3. Configure
-cp .env.example .env          # then fill in DATABASE_URL, DIRECT_URL, AUTH_SECRET
+cp .env.example .env          # then fill in DATABASE_URL, AUTH_SECRET
 
 # 4. Create the schema and seed demo content
 npm run db:deploy
@@ -42,18 +42,24 @@ npm run dev                   # http://localhost:3000
 Seeded staff login: `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`
 (defaults `kanyi@example.com` / `change-me-before-deploying` — **change this**).
 
-### Using a managed Postgres (Neon, Supabase)
+### Database (MariaDB / MySQL)
 
-Both expose two endpoints, and the app expects both:
+The app talks to MariaDB/MySQL. Compose `DATABASE_URL` from the details your
+host shows in its panel:
 
-| Variable | Which endpoint | Used by |
-| --- | --- | --- |
-| `DATABASE_URL` | **pooled** (Supabase `:6543`, Neon `-pooler`) | the app at runtime |
-| `DIRECT_URL` | **direct** (Supabase `:5432`, Neon non-pooler) | migrations + introspection only |
+```
+mysql://<db-user>:<db-password>@<db-host>:3306/<db-name>
+```
 
-Migrations must bypass the pooler: PgBouncer in transaction mode cannot run DDL.
-The runtime client uses the pooled endpoint through a driver adapter, so a
-serverless fleet cannot exhaust the database's connection limit.
+Percent-encode special characters in the password (`p@ss` → `p%40ss`); the
+`mariadb://` scheme is accepted as well. `DIRECT_URL` only exists for providers
+that expose a separate endpoint for migrations — with a single endpoint
+(HostAfrica, a VPS) leave it empty and the Prisma CLI falls back to
+`DATABASE_URL`.
+
+`prisma migrate dev` (the local-dev command) creates a scratch shadow database,
+so the user must be allowed to `CREATE DATABASE`. Production and hosted panels
+usually run `npm run db:deploy` instead, which needs no such rights.
 
 ---
 
@@ -84,9 +90,9 @@ placeholders and storage wiring all work in that environment.
 Full reference with descriptions: [`.env.example`](.env.example).
 
 The only variables required to boot are `DATABASE_URL` and `AUTH_SECRET`.
-`STORAGE_DRIVER` defaults to `local`; set it to `s3` (with `S3_*` and
-`STORAGE_PUBLIC_BASE_URL`) before deploying anywhere that matters — see
-[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+`STORAGE_DRIVER` defaults to `local` (server disk — fine on a single VPS, with
+backups); switch to `s3` when the filesystem is ephemeral or several instances
+serve traffic — see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 Environment is validated lazily at first use rather than at import, so a missing
 runtime secret fails the request that needs it instead of breaking the build.
@@ -185,8 +191,8 @@ policy — only queries — which keeps them safe to reuse from a future worker.
 
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system architecture, data
   model, API endpoints, UI architecture, and how each part scales.
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — deploying to Vercel or a
-  container host, storage setup, migrations, monitoring, and the runbook.
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — deploying to a VPS (with
+  systemd + nginx), photo storage, migrations, monitoring, and the runbook.
 
 ---
 
@@ -207,11 +213,14 @@ break instant publishing, which is the whole point of the site.
 At more than one instance, set `REDIS_URL` and swap `createRateLimiter()` for a
 shared implementation; the interface is one method wide for that reason.
 
-**`npm audit` reports high-severity advisories in the Prisma CLI dependency
-chain** (`deepmerge-ts`, `mysql2`). These are devDependencies used by the
-migration CLI, are not part of the runtime bundle, and `mysql2` is unreachable
-because this project only uses Postgres. The only offered fix downgrades to
-Prisma 6, which is a breaking change; the advisories are accepted and tracked.
+**`npm audit` reports high-severity advisories in devDependencies** —
+`deepmerge-ts` and `mysql2` in the Prisma CLI chain, `braces` in the ESLint
+chain. None of them are part of the production bundle: the Prisma CLI only runs
+on a developer machine or CI, and the offered fixes downgrade Prisma to 6 or
+ESLint config, which are breaking changes. The shipped runtime connector
+(`mariadb`, pulled in by `@prisma/adapter-mariadb`) is held at a patched release
+through the `overrides` block in `package.json`; drop the override once the
+adapter raises its own pin.
 
 **Payments are manual by design.** `placeOrder()` is the only place a total is
 computed, and a `PaymentMethod` enum already models `GATEWAY`, so adding M-Pesa

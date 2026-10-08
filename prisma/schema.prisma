@@ -14,7 +14,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
 }
 
 // ---------------------------------------------------------------------------
@@ -53,7 +53,8 @@ model Session {
   expiresAt DateTime
   revokedAt DateTime?
   ip        String?
-  userAgent String?
+  /// User-Agent strings routinely exceed MySQL's default VARCHAR(191).
+  userAgent String?   @db.Text
   createdAt DateTime  @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -76,7 +77,7 @@ model Cake {
   id          String     @id @default(cuid())
   slug        String     @unique
   title       String
-  description String
+  description String     @db.Text
   flavour     String?
   occasion    String?
   servings    Int?
@@ -108,13 +109,14 @@ model Cake {
 model CakeImage {
   id          String   @id @default(cuid())
   cakeId      String
-  storageKey  String
-  url         String
+  storageKey  String   @db.VarChar(255)
+  url         String   @db.VarChar(500)
   width       Int
   height      Int
   /// Tiny base64 LQIP so the grid never flashes empty boxes on a phone.
-  blurDataUrl String?
-  alt         String
+  /// Base64 payloads blow past VARCHAR(191) — Text keeps them intact.
+  blurDataUrl String?  @db.Text
+  alt         String   @db.VarChar(500)
   position    Int      @default(0)
   isCover     Boolean  @default(false)
   byteSize    Int?
@@ -150,7 +152,7 @@ model Product {
   id          String        @id @default(cuid())
   slug        String        @unique
   name        String
-  description String
+  description String        @db.Text
   priceCents  Int
   /// e.g. "per pack of 6"
   unitLabel   String        @default("each")
@@ -173,12 +175,12 @@ model Product {
 model ProductImage {
   id          String   @id @default(cuid())
   productId   String
-  storageKey  String
-  url         String
+  storageKey  String   @db.VarChar(255)
+  url         String   @db.VarChar(500)
   width       Int
   height      Int
-  blurDataUrl String?
-  alt         String
+  blurDataUrl String?  @db.Text
+  alt         String   @db.VarChar(500)
   position    Int      @default(0)
   isCover     Boolean  @default(false)
   byteSize    Int?
@@ -246,10 +248,10 @@ model Order {
   customerEmail String?
 
   fulfilment      FulfilmentType @default(PICKUP)
-  deliveryAddress String?
+  deliveryAddress String?        @db.Text
   /// Requested date/time for the bake.
   requestedFor    DateTime?
-  notes           String?
+  notes           String?        @db.Text
 
   subtotalCents    Int
   deliveryFeeCents Int @default(0)
@@ -263,7 +265,7 @@ model Order {
   /// Guards against double-submits and client retries creating duplicate orders.
   idempotencyKey String? @unique
 
-  internalNotes String?
+  internalNotes String? @db.Text
   confirmedAt   DateTime?
   completedAt   DateTime?
   cancelledAt   DateTime?
@@ -323,7 +325,7 @@ model OutboxEvent {
   attempts    Int          @default(0)
   availableAt DateTime     @default(now())
   processedAt DateTime?
-  lastError   String?
+  lastError   String?      @db.Text
   createdAt   DateTime     @default(now())
 
   @@index([status, availableAt])

@@ -6,7 +6,7 @@ import { serverEnv } from "@/lib/env";
  * GET /api/health
  *
  * Liveness + readiness probe. Deliberately checks the database, because an app
- * that is running but cannot reach Postgres is *not* healthy and should be
+ * that is running but cannot reach MariaDB is *not* healthy and should be
  * pulled out of rotation.
  *
  * Kept as cheap as possible: a bounded `SELECT 1`, not a count over a large

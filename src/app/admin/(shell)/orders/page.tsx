@@ -46,9 +46,11 @@ async function OrdersContent({ searchParams }: { searchParams: SearchParams }) {
       ...(validStatus ? { status: validStatus as never } : {}),
       ...(search
         ? {
+            // No `mode: "insensitive"` — MySQL/MariaDB's utf8mb4_unicode_ci
+            // collation makes `contains` case-insensitive by default.
             OR: [
-              { publicRef: { contains: search, mode: "insensitive" } },
-              { customerName: { contains: search, mode: "insensitive" } },
+              { publicRef: { contains: search } },
+              { customerName: { contains: search } },
               { customerPhone: { contains: search } },
             ],
           }

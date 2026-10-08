@@ -1,10 +1,10 @@
 // Prisma CLI configuration (Prisma 7 resolves `prisma7.config.ts` for this release).
 //
-// Note there is no `directUrl` in Prisma 7 — the split is:
-//   * the CLI (migrate/introspect) uses `DIRECT_URL` below, which must bypass
-//     any connection pooler because PgBouncer cannot run DDL in transaction mode
-//   * the runtime PrismaClient uses the POOLED `DATABASE_URL`, wired up through
-//     the driver adapter in src/lib/db.ts
+// The CLI (migrate/introspect) runs against `DIRECT_URL` when your provider
+// gives you a separate endpoint for it; most MariaDB/MySQL hosts (HostAfrica
+// included) hand you one account, so `DATABASE_URL` is used as the fallback.
+// The runtime PrismaClient connects through the driver adapter in src/lib/db.ts
+// and only ever reads `DATABASE_URL`.
 //
 // `dotenv/config` is required: Prisma 7 does not read .env files on its own.
 import "dotenv/config";
@@ -17,13 +17,12 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    // Falls back to DATABASE_URL for single-endpoint databases (local dev,
-    // self-hosted Postgres) that have no pooler to bypass.
-    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
-    // `prisma migrate dev` diffs against a scratch "shadow" database. Managed
-    // Postgres that exposes only one database (e.g. Prisma Dev) needs this
-    // pointed at a separate endpoint; leave it unset elsewhere and Prisma
-    // creates a temporary one.
+    // `||` (not `??`) so an empty DIRECT_URL also falls back to DATABASE_URL.
+    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
+    // `prisma migrate dev` diffs against a scratch "shadow" database. Hosts
+    // that do not let the database user CREATE DATABASE need this pointed at a
+    // separate database; leave it unset locally and Prisma creates and drops
+    // its own. Production runs `migrate deploy`, which never needs a shadow.
     shadowDatabaseUrl: process.env["SHADOW_DATABASE_URL"] || undefined,
   },
 });

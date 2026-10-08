@@ -1,34 +1,38 @@
 # Local development dependencies.
 #
-# Postgres only — the app itself runs on `next dev`, so there is no application
+# MariaDB only — the app itself runs on `next dev`, so there is no application
 # container here. For a self-hosted production deployment see docs/DEPLOYMENT.md.
 #
 #   docker compose up -d
 #   npm run db:deploy && npm run db:seed
 #
-# Host port 5433 avoids colliding with a Postgres already installed on 5432.
+# Host port 3307 avoids colliding with a MySQL/MariaDB already installed on
+# 3306. The image tracks the MariaDB 10.11 LTS line that shared cPanel hosts
+# (HostAfrica included) commonly run, so local behaviour matches production.
+#
+# Credentials here match the DATABASE_URL in .env.example — they are for local
+# development only and must never be reused on a public host.
 
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: pbk-postgres
+  mariadb:
+    image: mariadb:10.11
+    container_name: pbk-mariadb
     restart: unless-stopped
     environment:
-      POSTGRES_USER: pastry
-      POSTGRES_PASSWORD: pastry
-      POSTGRES_DB: pastry
-      # Deterministic collation regardless of the host machine's locale.
-      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      MARIADB_USER: pastry
+      MARIADB_PASSWORD: pastry
+      MARIADB_DATABASE: pastry
+      MARIADB_ROOT_PASSWORD: pastry-root
     ports:
-      - "5433:5432"
+      - "3307:3306"
     volumes:
-      - pbk-pgdata:/var/lib/postgresql/data
+      - pbk-mariadbdata:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pastry -d pastry"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
       timeout: 5s
       retries: 10
-      start_period: 10s
+      start_period: 15s
 
 volumes:
-  pbk-pgdata:
+  pbk-mariadbdata:
