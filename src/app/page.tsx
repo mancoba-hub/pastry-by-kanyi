@@ -18,7 +18,7 @@ import { leadTimeLabel } from "@/features/orders/schema";
  */
 
 export const metadata = {
-  title: `${publicEnv.siteName} — Cakes baked to order`,
+  title: `${publicEnv.siteName} · Cakes baked to order`,
   description:
     "Browse a gallery of cakes baked for real customers, order small-batch scones, and place your own cake order on WhatsApp.",
   alternates: { canonical: "/" },
@@ -52,7 +52,7 @@ async function FeaturedRail() {
   if (rail.length === 0) {
     return (
       <p className="text-sm text-[var(--color-muted-foreground)]">
-        No bakes published yet — the gallery is about to get busy.
+        No bakes published yet. The gallery is about to get busy.
       </p>
     );
   }
@@ -138,7 +138,7 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-base text-[var(--color-muted-foreground)] sm:text-lg">
-            A working gallery of recent bakes browse what&apos;s possible, then tell us what you
+            A working gallery of recent bakes: browse what&apos;s possible, then tell us what you
             have in mind. Cakes are baked to order; scones come in small batches.
           </p>
 

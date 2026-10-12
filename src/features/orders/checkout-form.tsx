@@ -59,7 +59,7 @@ export function CheckoutForm({ earliestLocal }: { earliestLocal: string }) {
       <div className="mx-auto w-full max-w-3xl px-4 py-14">
         <EmptyState
           title="Nothing to check out"
-          description="Your basket is empty — find something you like first."
+          description="Your basket is empty. Find something you like first."
           action={
             <Link href="/gallery" className={buttonClasses()}>
               Browse the gallery

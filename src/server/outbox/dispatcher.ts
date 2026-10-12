@@ -36,8 +36,8 @@ const MAX_ATTEMPTS = 5;
  */
 const notifyBakerOfOrder: OutboxHandler = async (payload) => {
   const link = whatsappLink(
-    `New order ${String(payload.publicRef)} — ${String(payload.customerName)} — ` +
-      `${formatMoney(Number(payload.totalCents ?? 0))} — ${String(payload.itemCount)} item(s).`,
+    `New order ${String(payload.publicRef)} from ${String(payload.customerName)}: ` +
+      `${formatMoney(Number(payload.totalCents ?? 0))}, ${String(payload.itemCount)} item(s).`,
   );
 
   logger.info("outbox.order.created.notify", {

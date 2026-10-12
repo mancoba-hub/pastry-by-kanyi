@@ -54,7 +54,7 @@ export async function createProductAction(_prev: ActionState, formData: FormData
         await uploadImage({
           target: { kind: "PRODUCT", productId: product.id },
           file,
-          alt: `${input.name}${images.length > 1 ? ` — photo ${index + 1}` : ""}`,
+          alt: `${input.name}${images.length > 1 ? `, photo ${index + 1}` : ""}`,
           makeCover: index === 0,
         });
       } catch (error) {
@@ -69,7 +69,7 @@ export async function createProductAction(_prev: ActionState, formData: FormData
     redirect(
       `/admin/products?notice=${encodeURIComponent(
         imageErrors.length > 0
-          ? `Product saved. Photos skipped — ${imageErrors.join("; ")}`
+          ? `Product saved. Photos skipped: ${imageErrors.join("; ")}`
           : "Product created.",
       )}`,
     );
@@ -114,7 +114,7 @@ export async function updateProductAction(_prev: ActionState, formData: FormData
         await uploadImage({
           target: { kind: "PRODUCT", productId },
           file,
-          alt: `${input.name} — additional photo`,
+          alt: `${input.name}, additional photo`,
         });
       } catch (error) {
         if (error instanceof UploadError) imageErrors.push(`${file.name}: ${error.message}`);
@@ -129,7 +129,7 @@ export async function updateProductAction(_prev: ActionState, formData: FormData
       ok: true,
       message:
         imageErrors.length > 0
-          ? `Saved. Some photos were skipped — ${imageErrors.join("; ")}`
+          ? `Saved. Some photos were skipped: ${imageErrors.join("; ")}`
           : "Changes saved.",
     };
   } catch (error) {

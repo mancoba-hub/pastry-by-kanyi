@@ -58,7 +58,7 @@ export default function OrderLookupPage() {
     <div className="mx-auto w-full max-w-md px-4 py-14">
       <h1 className="text-3xl font-semibold">Track your order</h1>
       <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
-        Enter the reference from your order confirmation it looks like{" "}
+        Enter the reference from your order confirmation. It looks like{" "}
         <span className="font-medium text-[var(--color-foreground)]">PBK-8F2K9A</span>.
       </p>
 

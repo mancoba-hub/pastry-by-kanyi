@@ -35,7 +35,7 @@ async function LoginPane({ searchParams }: { searchParams: Promise<Record<string
     <div className="w-full max-w-sm">
       <h1 className="text-2xl font-semibold">Sign in</h1>
       <p className="mt-2 mb-7 text-sm text-[var(--color-muted-foreground)]">
-        Staff area — manage the gallery, products and orders.
+        Staff area: manage the gallery, products and orders.
       </p>
 
       <LoginForm next={firstValue(sp.next)} />

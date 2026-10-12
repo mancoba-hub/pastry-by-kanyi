@@ -14,12 +14,12 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     question: `How much notice do you need?`,
-    answer: `At least ${leadTimeLabel()} for cakes — the earlier the better, especially around December. Late orders only go ahead if we have capacity, and that depends on the design you are after.`,
+    answer: `At least ${leadTimeLabel()} for cakes, and the earlier the better, especially around December. Late orders only go ahead if we have capacity, and that depends on the design you are after.`,
   },
   {
     question: "Do you deliver?",
     answer:
-      "Collection is from our kitchen. Delivery within Cape Town can be arranged for larger orders — message us with your location and we'll quote it.",
+      "Collection is from our kitchen. Delivery within Cape Town can be arranged for larger orders; message us with your location and we'll quote it.",
   },
   {
     question: "Can you copy a cake I've seen online?",
@@ -29,7 +29,7 @@ const FAQ = [
   {
     question: "How do I pay?",
     answer:
-      "No online payment. We confirm the order on WhatsApp — a 50% deposit secures your slot, and orders of R200 or less are paid in full. The outstanding balance is settled the day before collection.",
+      "No online payment. We confirm the order on WhatsApp. A 50% deposit secures your slot, and orders of R200 or less are paid in full. The outstanding balance is settled the day before collection.",
   },
 ];
 
@@ -45,7 +45,7 @@ export default function AboutPage() {
         </p>
         <p>
           Every cake in the gallery was made for a real customer and photographed as it left the
-          kitchen. Nothing is staged and nothing is a stock photo — it is simply a record of what
+          kitchen. Nothing is staged and nothing is a stock photo; it is simply a record of what
           we have baked and what we are able to bake.
         </p>
         <p>

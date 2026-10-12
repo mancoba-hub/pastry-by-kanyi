@@ -51,7 +51,7 @@ const LISTS = [
     image: priceList,
     title: "Price list",
     alt: "Pastry Box by Kanyi price list",
-    caption: "Starting prices only your quote depends on size, design and the detail you ask for.",
+    caption: "Starting prices only. Your quote depends on size, design and the detail you ask for.",
   },
   {
     image: bentoRange,
@@ -96,8 +96,8 @@ export default function HowToOrderPage() {
             before collection.
           </p>
           <p>
-            Late orders are accommodated only if we have capacity, and that depends on the design
-            the simpler the cake, the likelier we can fit it in.
+            Late orders are accommodated only if we have capacity, and that depends on the design.
+            The simpler the cake, the likelier we can fit it in.
           </p>
         </div>
       </section>
@@ -143,7 +143,7 @@ export default function HowToOrderPage() {
       <section className="mt-14">
         <h2 className="text-2xl font-semibold">Flavours, prices &amp; bento range</h2>
         <p className="mt-3 text-[var(--color-muted-foreground)]">
-          The price list shows starting prices, not final ones every quote depends on the size,
+          The price list shows starting prices, not final ones. Every quote depends on the size,
           the design and the detail you ask for.
         </p>
 
@@ -181,7 +181,7 @@ export default function HowToOrderPage() {
       <div className="mt-14 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface-muted)] p-6">
         <h2 className="text-xl font-semibold">Still deciding?</h2>
         <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-          Send us your date and an inspiration picture we are happy to talk through sizes and
+          Send us your date and an inspiration picture, and we are happy to talk through sizes and
           flavours before you commit to anything.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">

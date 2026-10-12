@@ -5,7 +5,7 @@ import { getEarliestCollectionLocal } from "@/server/services/site-service";
 
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Confirm your order collection or delivery, pay on receipt.",
+  description: "Confirm your order: collection or delivery, pay on receipt.",
   // A basket is per-visitor; there is nothing here worth indexing.
   robots: { index: false, follow: true },
 };

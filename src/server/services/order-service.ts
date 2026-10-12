@@ -82,7 +82,7 @@ async function resolveLines(
       if (cake.priceCents == null) {
         return failure(
           "VALIDATION",
-          `"${cake.title}" is priced on request — please enquire on WhatsApp instead.`,
+          `"${cake.title}" is priced on request, so please enquire on WhatsApp instead.`,
           { items: [`"${cake.title}" needs a custom quote.`] },
         );
       }

@@ -13,7 +13,7 @@ import { publicEnv } from "@/lib/env";
 export const metadata: Metadata = {
   title: "Cake gallery",
   description:
-    "A working gallery of cakes baked for real customers — birthdays, weddings, baby showers and everything in between.",
+    "A working gallery of cakes baked for real customers: birthdays, weddings, baby showers and everything in between.",
   alternates: { canonical: "/gallery" },
 };
 
@@ -109,7 +109,7 @@ export default function GalleryPage(props: PageProps<"/gallery">) {
         <h1 className="text-3xl font-semibold sm:text-4xl">The gallery</h1>
         <p className="mt-3 max-w-2xl text-[var(--color-muted-foreground)]">
           Everything here was baked for a real customer and photographed as it left the kitchen.
-          Nothing is a stock photo if you like it, we can make it for you.
+          Nothing is a stock photo. If you like it, we can make it for you.
         </p>
       </header>
 

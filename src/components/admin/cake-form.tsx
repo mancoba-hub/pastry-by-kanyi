@@ -218,9 +218,9 @@ export function CakeForm({
             defaultValue={values?.status ?? "DRAFT"}
             className={inputClasses}
           >
-            <option value="DRAFT">Draft — hidden from the gallery</option>
-            <option value="PUBLISHED">Published — visible to customers</option>
-            <option value="ARCHIVED">Archived — retired, link kept alive</option>
+            <option value="DRAFT">Draft (hidden from the gallery)</option>
+            <option value="PUBLISHED">Published (visible to customers)</option>
+            <option value="ARCHIVED">Archived (retired, link kept alive)</option>
           </select>
           <FieldError messages={fields.status} />
         </div>
@@ -242,7 +242,7 @@ export function CakeForm({
       </div>
 
       <div>
-        <Label htmlFor="images" hint="(JPEG, PNG or WebP — up to 15 MB each)">
+        <Label htmlFor="images" hint="(JPEG, PNG or WebP, up to 15 MB each)">
           {mode === "create" ? "Photos" : "Add photos"}
         </Label>
         <input

@@ -76,7 +76,7 @@ export async function createCakeAction(_prev: ActionState, formData: FormData): 
         await uploadImage({
           target: { kind: "CAKE", cakeId: cake.id },
           file,
-          alt: `${input.title}${images.length > 1 ? ` — photo ${index + 1}` : ""}`,
+          alt: `${input.title}${images.length > 1 ? `, photo ${index + 1}` : ""}`,
           makeCover: index === 0,
         });
       } catch (error) {
@@ -93,7 +93,7 @@ export async function createCakeAction(_prev: ActionState, formData: FormData): 
       // rather than pretending the whole thing failed.
       redirect(
         `/admin/cakes/${cake.id}?notice=${encodeURIComponent(
-          `Cake saved, but some photos were skipped — ${imageErrors.join("; ")}`,
+          `Cake saved, but some photos were skipped: ${imageErrors.join("; ")}`,
         )}`,
       );
     }
@@ -143,7 +143,7 @@ export async function updateCakeAction(_prev: ActionState, formData: FormData): 
         await uploadImage({
           target: { kind: "CAKE", cakeId },
           file,
-          alt: `${input.title} — additional photo`,
+          alt: `${input.title}, additional photo`,
         });
       } catch (error) {
         if (error instanceof UploadError) imageErrors.push(`${file.name}: ${error.message}`);
@@ -158,7 +158,7 @@ export async function updateCakeAction(_prev: ActionState, formData: FormData): 
       ok: true,
       message:
         imageErrors.length > 0
-          ? `Saved. Some photos were skipped — ${imageErrors.join("; ")}`
+          ? `Saved. Some photos were skipped: ${imageErrors.join("; ")}`
           : "Changes saved.",
     };
   } catch (error) {

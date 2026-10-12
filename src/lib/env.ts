@@ -20,7 +20,7 @@ const serverSchema = z.object({
 
   AUTH_SECRET: z
     .string()
-    .min(32, "AUTH_SECRET must be at least 32 characters — use a random 32-byte value"),
+    .min(32, "AUTH_SECRET must be at least 32 characters. Use a random 32-byte value"),
 
   STORAGE_DRIVER: z.enum(["local", "s3"]).default("local"),
   STORAGE_LOCAL_DIR: z.string().default(".uploads"),

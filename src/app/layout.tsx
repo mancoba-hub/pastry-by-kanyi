@@ -31,7 +31,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.siteUrl),
   title: {
-    default: `${publicEnv.siteName} — Cakes baked to order`,
+    default: `${publicEnv.siteName} · Cakes baked to order`,
     template: `%s · ${publicEnv.siteName}`,
   },
   description:

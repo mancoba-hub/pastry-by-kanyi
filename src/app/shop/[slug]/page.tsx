@@ -107,7 +107,7 @@ async function ProductDetail({ slug }: { slug: string }) {
 
         <p className="mt-4 text-xs text-[var(--color-muted-foreground)]">
           Collection in {publicEnv.businessLocation || "Cape Town"}. Delivery available for larger
-          orders — ask us.
+          orders, so just ask.
         </p>
       </div>
     </article>

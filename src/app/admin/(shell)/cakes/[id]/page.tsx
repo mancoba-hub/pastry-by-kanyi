@@ -73,7 +73,7 @@ async function EditCakeContent({ params, searchParams }: { params: Params; searc
                 }.`
               : cake.status === "DRAFT"
                 ? "Not visible to customers yet."
-                : "Retired — the link still works but it is out of the gallery."}
+                : "Retired: the link still works but it is out of the gallery."}
           </p>
         </div>
 
@@ -135,7 +135,7 @@ async function EditCakeContent({ params, searchParams }: { params: Params; searc
 
           {cake.images.length === 0 ? (
             <p className="text-sm text-[var(--color-muted-foreground)]">
-              No photos yet. Add some above — the first becomes the cover.
+              No photos yet. Add some above; the first becomes the cover.
             </p>
           ) : (
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">

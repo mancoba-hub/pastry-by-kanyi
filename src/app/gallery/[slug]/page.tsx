@@ -157,7 +157,7 @@ async function CakeDetail({ slug }: { slug: string }) {
             <div className="col-span-2">
               <dt className="text-[var(--color-muted-foreground)]">Lead time</dt>
               <dd className="mt-0.5">
-                At least {leadTimeLabel()} — we bake to order, never ahead.
+                At least {leadTimeLabel()}. We bake to order, never ahead.
               </dd>
             </div>
           </dl>
@@ -201,7 +201,7 @@ async function CakeDetail({ slug }: { slug: string }) {
           </div>
 
           <p className="mt-4 text-xs text-[var(--color-muted-foreground)]">
-            Prices are a guide — final cost depends on size, detailing and delivery. Message us and
+            Prices are a guide; final cost depends on size, detailing and delivery. Message us and
             we&apos;ll confirm.
           </p>
         </div>

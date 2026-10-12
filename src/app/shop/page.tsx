@@ -7,7 +7,7 @@ import { whatsappLink } from "@/lib/whatsapp";
 import { publicEnv } from "@/lib/env";
 
 export const metadata: Metadata = {
-  title: "Shop — scones & pastries",
+  title: "Shop · scones & pastries",
   description: "Small-batch scones and pastries, baked the same morning. Order for collection or delivery.",
   alternates: { canonical: "/shop" },
 };
@@ -74,7 +74,7 @@ export default function ShopPage() {
       <section className="mt-14">
         <SectionHeading
           title="Ordering a lot?"
-          subtitle="Offices, events and cafés — talk to us about a standing order."
+          subtitle="Offices, events and cafés: talk to us about a standing order."
         />
         <a
           href={whatsappLink(`Hi ${publicEnv.siteName}! I'd like to talk about a regular scone order.`)}

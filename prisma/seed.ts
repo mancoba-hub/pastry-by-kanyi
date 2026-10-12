@@ -300,7 +300,7 @@ async function main() {
         prefix: "cakes",
         entityId: row.id,
         palette: cake.palette,
-        alt: `${cake.title} — ${cake.flavour}`,
+        alt: `${cake.title} · ${cake.flavour}`,
       });
     }
 

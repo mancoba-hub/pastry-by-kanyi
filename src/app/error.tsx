@@ -27,7 +27,7 @@ export default function ErrorBoundary({
     <div className="mx-auto flex w-full max-w-lg flex-col items-center px-4 py-20 text-center">
       <h1 className="text-3xl font-semibold">Something went wrong</h1>
       <p className="mt-3 text-[var(--color-muted-foreground)]">
-        This one is on us, not you. Try again and if it keeps happening, message us on WhatsApp and
+        This one is on us, not you. Try again, and if it keeps happening, message us on WhatsApp and
         we&apos;ll take your order there.
       </p>
 
