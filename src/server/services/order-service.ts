@@ -11,7 +11,7 @@ import {
   checkoutLineSchema,
   checkoutSchema,
   earliestRequestedDate,
-  LEAD_TIME_HOURS,
+  leadTimeLabel,
   type CheckoutLine,
 } from "@/features/orders/schema";
 import type { OrderDetail } from "@/server/repositories/order-repository";
@@ -231,8 +231,8 @@ export async function placeOrder(
   if (requestedFor.getTime() < earliest.getTime()) {
     return failure(
       "VALIDATION",
-      `Cakes need at least ${LEAD_TIME_HOURS} hours' notice. The earliest we can do is ${earliest.toLocaleDateString("en-ZA", { day: "numeric", month: "long" })}.`,
-      { requestedFor: [`Choose a date at least ${LEAD_TIME_HOURS} hours from now.`] },
+      `Cakes need at least ${leadTimeLabel()}'s notice. The earliest we can do is ${earliest.toLocaleDateString("en-ZA", { day: "numeric", month: "long" })}.`,
+      { requestedFor: [`Choose a date at least ${leadTimeLabel()} from now.`] },
     );
   }
 

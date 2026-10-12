@@ -9,7 +9,7 @@ import { basketIdempotencyKey } from "@/features/cart/idempotency";
 import { buttonClasses, EmptyState, FieldError, inputClasses, Label } from "@/components/ui";
 import { formatMoney } from "@/lib/money";
 import { publicEnv } from "@/lib/env";
-import { LEAD_TIME_HOURS } from "@/features/orders/schema";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 /**
  * Checkout form.
@@ -231,7 +231,7 @@ export function CheckoutForm({ earliestLocal }: { earliestLocal: string }) {
             <legend className="mb-2 font-medium">When do you need it?</legend>
 
             <div>
-              <Label htmlFor="requestedFor" hint={`(at least ${LEAD_TIME_HOURS}h ahead)`}>
+              <Label htmlFor="requestedFor" hint={`(at least ${leadTimeLabel()} ahead)`}>
                 Date &amp; time
               </Label>
               <input
@@ -287,8 +287,8 @@ export function CheckoutForm({ earliestLocal }: { earliestLocal: string }) {
           </button>
 
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            No payment online. We confirm every order on WhatsApp and you pay on collection or
-            delivery.
+            No payment online. We confirm every order on WhatsApp, a 50% deposit secures your
+            slot, and the balance is settled the day before collection.
           </p>
         </form>
 

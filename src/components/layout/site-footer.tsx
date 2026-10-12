@@ -4,6 +4,7 @@ import logo from "@/images/logo.png";
 import { publicEnv } from "@/lib/env";
 import { whatsappLink } from "@/lib/whatsapp";
 import { getCurrentYear } from "@/server/services/site-service";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 export async function SiteFooter() {
   const year = await getCurrentYear();
@@ -30,6 +31,11 @@ export async function SiteFooter() {
             <li>
               <Link href="/shop" className="hover:text-[var(--color-foreground)]">
                 Scones &amp; shop
+              </Link>
+            </li>
+            <li>
+              <Link href="/how-to-order" className="hover:text-[var(--color-foreground)]">
+                How to order
               </Link>
             </li>
             <li>
@@ -84,7 +90,8 @@ export async function SiteFooter() {
 
       <div className="border-t border-[var(--color-border)] py-5">
         <p className="mx-auto w-full max-w-6xl px-4 text-xs text-[var(--color-muted-foreground)]">
-          © {year} {publicEnv.siteName}. Baked in South Africa. Cakes need at least 48 hours&apos; notice.
+          © {year} {publicEnv.siteName}. Baked in Cape Town, South Africa. Cakes need at least{" "}
+          {leadTimeLabel()}&apos;s notice.
         </p>
       </div>
     </footer>

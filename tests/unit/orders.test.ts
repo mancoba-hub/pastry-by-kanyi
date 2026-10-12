@@ -3,6 +3,7 @@ import {
   checkoutSchema,
   earliestRequestedDate,
   LEAD_TIME_HOURS,
+  leadTimeLabel,
   MAX_LINE_QUANTITY,
 } from "@/features/orders/schema";
 import { generateOrderRef, randomToken, sha256 } from "@/lib/ids";
@@ -85,8 +86,9 @@ describe("checkoutSchema", () => {
 });
 
 describe("lead time", () => {
-  it("is 48 hours", () => {
-    expect(LEAD_TIME_HOURS).toBe(48);
+  it("is one week", () => {
+    expect(LEAD_TIME_HOURS).toBe(168);
+    expect(leadTimeLabel()).toBe("1 week");
   });
 
   it("returns a date the configured lead time ahead", () => {

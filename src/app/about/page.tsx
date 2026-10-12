@@ -3,7 +3,7 @@ import Link from "next/link";
 import { buttonClasses } from "@/components/ui";
 import { publicEnv } from "@/lib/env";
 import { whatsappLink } from "@/lib/whatsapp";
-import { LEAD_TIME_HOURS } from "@/features/orders/schema";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 export const metadata: Metadata = {
   title: "About",
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 const FAQ = [
   {
     question: `How much notice do you need?`,
-    answer: `At least ${LEAD_TIME_HOURS} hours for cakes. Bigger celebration and wedding cakes are better with a week or two — the earlier the better, especially around December.`,
+    answer: `At least ${leadTimeLabel()} for cakes — the earlier the better, especially around December. Late orders only go ahead if we have capacity, and that depends on the design you are after.`,
   },
   {
     question: "Do you deliver?",
@@ -29,7 +29,7 @@ const FAQ = [
   {
     question: "How do I pay?",
     answer:
-      "No online payment. We confirm the order on WhatsApp and you pay on collection or delivery — cash or M-Pesa.",
+      "No online payment. We confirm the order on WhatsApp — a 50% deposit secures your slot, and orders of R200 or less are paid in full. The outstanding balance is settled the day before collection.",
   },
 ];
 
@@ -71,6 +71,9 @@ export default function AboutPage() {
         <div className="mt-4 flex flex-wrap gap-3">
           <Link href="/gallery" className={buttonClasses()}>
             Browse the gallery
+          </Link>
+          <Link href="/how-to-order" className={buttonClasses({ variant: "secondary" })}>
+            How to order
           </Link>
           <a
             href={whatsappLink(`Hi ${publicEnv.siteName}! I have a question.`)}

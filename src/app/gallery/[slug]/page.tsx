@@ -16,7 +16,7 @@ import { Badge, buttonClasses, SectionHeading } from "@/components/ui";
 import { formatMoney } from "@/lib/money";
 import { publicEnv } from "@/lib/env";
 import { whatsappLink, cakeEnquiryMessage } from "@/lib/whatsapp";
-import { LEAD_TIME_HOURS } from "@/features/orders/schema";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 /**
  * Cake detail page.
@@ -157,7 +157,7 @@ async function CakeDetail({ slug }: { slug: string }) {
             <div className="col-span-2">
               <dt className="text-[var(--color-muted-foreground)]">Lead time</dt>
               <dd className="mt-0.5">
-                At least {LEAD_TIME_HOURS} hours — we bake to order, never ahead.
+                At least {leadTimeLabel()} — we bake to order, never ahead.
               </dd>
             </div>
           </dl>

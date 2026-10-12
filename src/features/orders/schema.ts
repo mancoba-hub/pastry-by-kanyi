@@ -66,9 +66,22 @@ export type CheckoutInput = z.infer<typeof checkoutSchema>;
  * Minimum lead time between ordering and collection/delivery.
  *
  * A cake is not a stocked item — it gets baked. Without a lead time the site
- * would happily accept an order for a three-tier cake in ten minutes.
+ * would happily accept an order for a three-tier cake in ten minutes. One week,
+ * which is also what the ordering page tells customers.
  */
-export const LEAD_TIME_HOURS = 48;
+export const LEAD_TIME_HOURS = 168;
+
+/** Lead time in words, so page copy can never drift from the enforced minimum. */
+export function leadTimeLabel(): string {
+  if (LEAD_TIME_HOURS % 168 === 0) {
+    const weeks = LEAD_TIME_HOURS / 168;
+    return weeks === 1 ? "1 week" : `${weeks} weeks`;
+  }
+
+  if (LEAD_TIME_HOURS % 24 === 0) return `${LEAD_TIME_HOURS / 24} days`;
+
+  return `${LEAD_TIME_HOURS} hours`;
+}
 
 export function earliestRequestedDate(now = new Date()): Date {
   return new Date(now.getTime() + LEAD_TIME_HOURS * 60 * 60 * 1000);

@@ -6,6 +6,7 @@ import { getTodayLabel } from "@/server/services/site-service";
 import { CakeCard, CakeCardSkeleton, GalleryGrid, ProductCard } from "@/components/gallery/cake-card";
 import { buttonClasses, SectionHeading, Badge } from "@/components/ui";
 import { publicEnv } from "@/lib/env";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 /**
  * Home page.
@@ -34,7 +35,7 @@ async function GalleryStats() {
       </div>
       <div>
         <dt className="text-[var(--color-muted-foreground)]">Cake lead time</dt>
-        <dd className="text-lg font-semibold">48 hours</dd>
+        <dd className="text-lg font-semibold">{leadTimeLabel()}</dd>
       </div>
       <div>
         <dt className="text-[var(--color-muted-foreground)]">Scones</dt>
@@ -224,7 +225,7 @@ export default function HomePage() {
           <h2 className="text-2xl font-semibold sm:text-3xl">Got a date in mind?</h2>
           <p className="mx-auto mt-3 max-w-lg text-sm text-[var(--color-muted-foreground)]">
             Send us the occasion, the number of guests and any inspiration you have. We&apos;ll come
-            back with a plan and a quote — usually the same day.
+            back with a plan and a quote usually the same day.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link href="/contact" className={buttonClasses({ size: "lg" })}>

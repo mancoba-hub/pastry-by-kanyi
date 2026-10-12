@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { buttonClasses } from "@/components/ui";
 import { publicEnv } from "@/lib/env";
 import { whatsappLink } from "@/lib/whatsapp";
-import { LEAD_TIME_HOURS } from "@/features/orders/schema";
+import { leadTimeLabel } from "@/features/orders/schema";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default function ContactPage() {
-  const message = `Hi ${publicEnv.siteName}! I'd like to order a cake.\n\nOccasion: \nDate needed: \nNumber of guests: \nInspiration: `;
+  const message = `Hi ${publicEnv.siteName}! I'd like to order a cake.\n\nDate of collection: \nFlavour: \nInspiration picture: \nNumber of servings/size: `;
 
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-12">
@@ -82,10 +83,22 @@ export default function ContactPage() {
       </dl>
 
       <div className="mt-12 rounded-[var(--radius-card)] border border-[var(--color-border)] bg-[var(--color-surface)] p-5 text-sm">
-        <p className="font-medium">Please give us at least {LEAD_TIME_HOURS} hours&apos; notice.</p>
+        <p className="font-medium">Please give us at least {leadTimeLabel()}&apos;s notice.</p>
         <p className="mt-1.5 text-[var(--color-muted-foreground)]">
-          Cakes are baked to order from scratch, so we can&apos;t turn one around same-day. Scones
+          Cakes are baked to order from scratch, so we can&apos;t turn one around same-day. Late
+          orders are accommodated only if we have capacity, and that depends on the design. Scones
           are more flexible — ask.
+        </p>
+        <p className="mt-3 text-[var(--color-muted-foreground)]">
+          A 50% deposit secures your order (orders of R200 or less are paid in full), and the
+          balance is settled the day before collection.{" "}
+          <Link
+            href="/how-to-order"
+            className="font-medium text-[var(--color-foreground)] underline underline-offset-2"
+          >
+            See how to order
+          </Link>{" "}
+          for everything we need from you.
         </p>
       </div>
     </div>
