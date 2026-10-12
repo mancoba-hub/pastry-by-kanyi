@@ -2,9 +2,24 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/images/logo.png";
+import { publicEnv } from "@/lib/env";
 import { ActiveNavLinks, NavLinks } from "./nav-links";
 import { MobileNav } from "./mobile-nav";
 import { CartBadge } from "./cart-badge";
+
+/**
+ * Splits the configured site name so the "by …" part can carry the accent
+ * colour: "Pastry Box by Kanyi" becomes ["Pastry Box", " by Kanyi"].
+ *
+ * Derived from `NEXT_PUBLIC_SITE_NAME` rather than hard-coded, because the
+ * wordmark is the one piece of branding a visitor sees on every page — it must
+ * never be the thing that lags behind a rename.
+ */
+function splitSiteName(name: string): [string, string] {
+  const marker = name.lastIndexOf(" by ");
+
+  return marker === -1 ? [name, ""] : [name.slice(0, marker), name.slice(marker)];
+}
 
 /**
  * Site header.
@@ -17,6 +32,8 @@ import { CartBadge } from "./cart-badge";
  * every page — adds almost nothing to the JavaScript bundle.
  */
 export function SiteHeader() {
+  const [brand, byline] = splitSiteName(publicEnv.siteName);
+
   return (
     <header className="sticky top-0 z-40 border-b border-[var(--color-border)] bg-[color-mix(in_srgb,var(--color-background)_88%,transparent)] backdrop-blur-md">
       <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4">
@@ -33,8 +50,8 @@ export function SiteHeader() {
             className="h-7 w-auto shrink-0 sm:h-10"
           />
           <span className="font-[family-name:var(--font-display)] text-base leading-none font-semibold tracking-tight whitespace-nowrap sm:text-xl">
-            Pastry
-            <span className="text-[var(--color-primary)]"> by Kanyi</span>
+            {brand}
+            {byline ? <span className="text-[var(--color-primary)]">{byline}</span> : null}
           </span>
         </Link>
 

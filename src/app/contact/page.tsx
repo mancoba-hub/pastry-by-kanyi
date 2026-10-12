@@ -19,7 +19,7 @@ export default function ContactPage() {
       <h1 className="text-3xl font-semibold sm:text-4xl">Let&apos;s plan your cake</h1>
 
       <p className="mt-4 max-w-xl text-[var(--color-muted-foreground)]">
-        WhatsApp is the fastest way to reach us — we usually reply the same day. Tell us the
+        WhatsApp is the fastest way to reach us we usually reply the same day. Tell us the
         occasion, the date and roughly how many people you&apos;re feeding, and we&apos;ll come back
         with ideas and a price.
       </p>
@@ -87,7 +87,7 @@ export default function ContactPage() {
         <p className="mt-1.5 text-[var(--color-muted-foreground)]">
           Cakes are baked to order from scratch, so we can&apos;t turn one around same-day. Late
           orders are accommodated only if we have capacity, and that depends on the design. Scones
-          are more flexible — ask.
+          are more flexible ask.
         </p>
         <p className="mt-3 text-[var(--color-muted-foreground)]">
           A 50% deposit secures your order (orders of R200 or less are paid in full), and the

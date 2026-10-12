@@ -7,7 +7,7 @@ import { leadTimeLabel } from "@/features/orders/schema";
 
 export const metadata: Metadata = {
   title: "About",
-  description: `Pastry Boxby Kanyi bakes cakes to order and small-batch scones in ${publicEnv.businessLocation || "Cape Town"}, South Africa.`,
+  description: `${publicEnv.siteName} bakes cakes to order and small-batch scones in ${publicEnv.businessLocation || "Cape Town"}.`,
   alternates: { canonical: "/about" },
 };
 

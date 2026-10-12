@@ -138,7 +138,7 @@ export default function HomePage() {
           </h1>
 
           <p className="mt-5 max-w-xl text-base text-[var(--color-muted-foreground)] sm:text-lg">
-            A working gallery of recent bakes — browse what&apos;s possible, then tell us what you
+            A working gallery of recent bakes browse what&apos;s possible, then tell us what you
             have in mind. Cakes are baked to order; scones come in small batches.
           </p>
 

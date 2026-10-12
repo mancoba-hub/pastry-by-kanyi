@@ -63,7 +63,7 @@ async function GalleryResults({
         title="No bakes match that yet"
         description={
           tag || occasion
-            ? "Try a different filter — or tell us what you have in mind and we'll bake it."
+            ? "Try a different filter or tell us what you have in mind and we'll bake it."
             : "The gallery is empty for now. The next bake will appear here."
         }
         action={
@@ -109,7 +109,7 @@ export default function GalleryPage(props: PageProps<"/gallery">) {
         <h1 className="text-3xl font-semibold sm:text-4xl">The gallery</h1>
         <p className="mt-3 max-w-2xl text-[var(--color-muted-foreground)]">
           Everything here was baked for a real customer and photographed as it left the kitchen.
-          Nothing is a stock photo — if you like it, we can make it for you.
+          Nothing is a stock photo if you like it, we can make it for you.
         </p>
       </header>
 

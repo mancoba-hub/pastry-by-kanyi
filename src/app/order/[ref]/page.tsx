@@ -61,7 +61,7 @@ async function OrderView({ publicRef, placed }: { publicRef: string; placed: boo
             sizes="(min-width: 704px) 640px, calc(100vw - 64px)"
             className="mb-4 h-auto w-full rounded-[var(--radius-card)]"
           />
-          <p className="font-medium text-[var(--color-success)]">Order received — thank you!</p>
+          <p className="font-medium text-[var(--color-success)]">Order received, thank you!</p>
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
             Send it to us on WhatsApp so we can confirm the details and start baking.
           </p>
