@@ -253,6 +253,9 @@ Notes worth knowing:
   Frankfurt and London are the closest to South Africa.
 - **Deploys are zero-downtime** — Render builds, health-checks and only then
   switches traffic (§10 covers rolling back).
+- **Plan IDs.** Render renamed compute plans in August 2026: services still accept
+  the legacy names (`starter`, `standard`, …), but **new Postgres databases
+  require the new IDs** (`0.1c-256mb`, `1c-2g`, …) — the Blueprint already uses them.
 - **Free plan** is a demo-only option: free services sleep after 15 minutes idle,
   free Postgres expires after 30 days, and cron jobs (like most deploy features)
   require a paid plan.

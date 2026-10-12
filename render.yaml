@@ -22,7 +22,12 @@
 databases:
   - name: pastry-db
     region: frankfurt
-    plan: starter
+    # Render's compute-plan IDs (CPU-RAM). 0.1c-256mb is the smallest paid
+    # Postgres plan: 0.1 CPU, 256 MB RAM, up to 100 concurrent connections —
+    # several times what DATABASE_POOL_MAX needs here. The legacy names
+    # ("starter", "basic-256mb") are rejected for new databases since the
+    # August 2026 rename.
+    plan: 0.1c-256mb
     postgresMajorVersion: "17"
     # External access stays enabled (Render's default) so the database can also
     # be reached from a developer machine running `npm run db:seed` against
