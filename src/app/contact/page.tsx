@@ -7,7 +7,7 @@ import { leadTimeLabel } from "@/features/orders/schema";
 
 export const metadata: Metadata = {
   title: "Contact",
-  description: `Order a cake or ask about scones — message Pastry by Kanyi in ${publicEnv.businessLocation || "Cape Town"}.`,
+  description: `Order a cake or ask about scones — message Pastry Box by Kanyi in ${publicEnv.businessLocation || "Cape Town"}.`,
   alternates: { canonical: "/contact" },
 };
 

@@ -299,7 +299,7 @@ Keep the process alive with a systemd unit instead of a terminal. `/etc/systemd/
 
 ```ini
 [Unit]
-Description=Pastry by Kanyi (Next.js)
+Description=Pastry Box by Kanyi (Next.js)
 After=network.target postgresql.service
 
 [Service]

@@ -1,4 +1,4 @@
-// Pastry by Kanyi — data model
+// Pastry Box by Kanyi — data model
 //
 // Conventions
 //  * Money is stored as an integer number of minor units (cents) in ZAR.

@@ -21,13 +21,13 @@ import { formatMoney } from "@/lib/money";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "A cake from the Pastry by Kanyi gallery";
+export const alt = "A cake from the Pastry Box by Kanyi gallery";
 
 export default async function OpenGraphImage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const cake = await getCakeBySlug(slug);
 
-  const title = cake?.title ?? "Pastry by Kanyi";
+  const title = cake?.title ?? "Pastry Box by Kanyi";
   const occasion = cake?.occasion ?? "Baked to order";
   const flavour = cake?.flavour ?? "Freshly baked in Cape Town";
   const price = cake?.priceCents != null ? formatMoney(cake.priceCents) : "Priced on request";
@@ -49,7 +49,7 @@ export default async function OpenGraphImage({ params }: { params: Promise<{ slu
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={{ display: "flex", fontSize: 30, color: "#9c2b47", fontWeight: 700 }}>
-            Pastry by Kanyi
+            Pastry Box by Kanyi
           </div>
           <div
             style={{

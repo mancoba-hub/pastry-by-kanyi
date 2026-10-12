@@ -8,7 +8,7 @@ import { publicEnv } from "@/lib/env";
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: publicEnv.siteName,
-    short_name: "Pastry by Kanyi",
+    short_name: "Pastry Box by Kanyi",
     description: "Cakes baked to order and small-batch scones.",
     start_url: "/",
     display: "standalone",

@@ -1,6 +1,6 @@
 # Architecture
 
-How Pastry by Kanyi is built, and why. Written to be read by whoever inherits
+How Pastry Box by Kanyi is built, and why. Written to be read by whoever inherits
 this codebase — including the baker, who should be able to see what happens when
 they tap "Publish".
 

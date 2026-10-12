@@ -32,7 +32,7 @@ export function ShareButton({
 
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
-        await navigator.share({ title, url: shareUrl, text: `${title} — Pastry by Kanyi` });
+        await navigator.share({ title, url: shareUrl, text: `${title} — Pastry Box by Kanyi` });
         return;
       } catch {
         // The user dismissed the sheet; fall through to the copy path.

@@ -12,7 +12,7 @@ import { leadTimeLabel } from "@/features/orders/schema";
 export const metadata: Metadata = {
   title: "How to order",
   description:
-    "How to order a cake from Pastry by Kanyi: what to send us on WhatsApp, deposits and payment, collection, plus our flavour list, price list and bento range.",
+    "How to order a cake from Pastry Box by Kanyi: what to send us on WhatsApp, deposits and payment, collection, plus our flavour list, price list and bento range.",
   alternates: { canonical: "/how-to-order" },
 };
 
@@ -44,19 +44,19 @@ const LISTS = [
   {
     image: flavours,
     title: "Flavour list",
-    alt: "Pastry by Kanyi flavour list",
+    alt: "Pastry Box by Kanyi flavour list",
     caption: "Every flavour we bake, from classic vanilla to the richer celebration combinations.",
   },
   {
     image: priceList,
     title: "Price list",
-    alt: "Pastry by Kanyi price list",
+    alt: "Pastry Box by Kanyi price list",
     caption: "Starting prices only — your quote depends on size, design and the detail you ask for.",
   },
   {
     image: bentoRange,
     title: "Bento range",
-    alt: "Pastry by Kanyi bento cake range",
+    alt: "Pastry Box by Kanyi bento cake range",
     caption: "Small bento bakes for birthdays, thank-yous and last-minute surprises.",
   },
 ] as const;
@@ -70,7 +70,7 @@ export default function HowToOrderPage() {
 
       <p className="mt-4 max-w-xl text-[var(--color-muted-foreground)]">
         Orders are placed on WhatsApp. Everything is baked to order, so the more notice you give us
-        the better your cake — and the easier your date is to secure.
+        the better your cake and the easier your date is to secure.
       </p>
 
       <div className="mt-8 flex flex-wrap gap-3">

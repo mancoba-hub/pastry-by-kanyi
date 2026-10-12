@@ -85,7 +85,7 @@ export function serverEnv(): ServerEnv {
  */
 export const publicEnv = {
   siteUrl: (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, ""),
-  siteName: process.env.NEXT_PUBLIC_SITE_NAME ?? "Pastry by Kanyi",
+  siteName: process.env.NEXT_PUBLIC_SITE_NAME ?? "Pastry Box by Kanyi",
   whatsappNumber: (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "").replace(/\D/g, ""),
   currency: process.env.NEXT_PUBLIC_CURRENCY ?? "ZAR",
   deliveryFeeCents: Number.parseInt(process.env.NEXT_PUBLIC_DELIVERY_FEE_CENTS ?? "0", 10) || 0,

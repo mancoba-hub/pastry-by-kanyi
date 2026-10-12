@@ -7,7 +7,7 @@ import { leadTimeLabel } from "@/features/orders/schema";
 
 export const metadata: Metadata = {
   title: "About",
-  description: `Pastry by Kanyi bakes cakes to order and small-batch scones in ${publicEnv.businessLocation || "Cape Town"}, South Africa.`,
+  description: `Pastry Boxby Kanyi bakes cakes to order and small-batch scones in ${publicEnv.businessLocation || "Cape Town"}, South Africa.`,
   alternates: { canonical: "/about" },
 };
 
@@ -36,7 +36,7 @@ const FAQ = [
 export default function AboutPage() {
   return (
     <div className="mx-auto w-full max-w-3xl px-4 py-12">
-      <h1 className="text-3xl font-semibold sm:text-4xl">About Pastry by Kanyi</h1>
+      <h1 className="text-3xl font-semibold sm:text-4xl">About Pastry Box by Kanyi</h1>
 
       <div className="mt-6 space-y-5 text-[var(--color-muted-foreground)]">
         <p>

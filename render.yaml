@@ -1,4 +1,4 @@
-# Render Blueprint for Pastry by Kanyi — https://render.com/docs/blueprint-spec
+# Render Blueprint for Pastry Box by Kanyi — https://render.com/docs/blueprint-spec
 #
 # Apply it with Dashboard → New → Blueprint → pick this repo. Render creates:
 #
@@ -69,7 +69,7 @@ services:
       - key: NEXT_PUBLIC_SITE_URL
         value: https://pastry-by-kanyi.onrender.com
       - key: NEXT_PUBLIC_SITE_NAME
-        value: Pastry by Kanyi
+        value: Pastry Box by Kanyi
       - key: NEXT_PUBLIC_WHATSAPP_NUMBER
         sync: false
       - key: NEXT_PUBLIC_CURRENCY

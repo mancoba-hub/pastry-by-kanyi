@@ -1,4 +1,4 @@
-# Pastry by Kanyi
+# Pastry Box by Kanyi
 
 A production-ready storefront for a South African home bakery: a live gallery of cakes
 baked for real customers, a small shop for scones, and a staff area for uploading
