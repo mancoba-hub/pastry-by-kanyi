@@ -21,7 +21,7 @@ Three facts drive every decision below.
 Two consequences:
 
 - **Optimise reads into the CDN, not the database.** Public pages are static or
-  partially prerendered. A gallery pageview should never reach MariaDB.
+  partially prerendered. A gallery pageview should never reach Postgres.
 - **Keep writes durable but non-blocking.** Placing an order must not wait on a
   third party, and publishing must be visible immediately without a redeploy.
 
@@ -47,11 +47,11 @@ Two consequences:
                         │  └────────────────────────┘  │
                         └───┬───────────┬──────────┬───┘
                             │           │          │
-                 ┌──────────────▼──┐  ┌─────▼──────┐  ┌▼─────────────────┐
-                 │ MariaDB      │  │ Object     │  │ Outbox worker    │
-                 │ (MySQL)      │  │ storage    │  │ `outbox:drain`   │
-                 │              │  │ R2/S3/CDN  │  │ (cron)           │
-                 └──────────────┘  └────────────┘  └──────────────────┘
+                 ┌──────────▼──┐  ┌─────▼──────┐  ┌▼─────────────────┐
+                 │ Postgres    │  │ Object     │  │ Outbox worker    │
+                 │ (managed)   │  │ storage    │  │ `outbox:drain`   │
+                 │             │  │ R2/S3/CDN  │  │ (cron)           │
+                 └─────────────┘  └────────────┘  └──────────────────┘
 ```
 
 ### Layers
@@ -62,7 +62,7 @@ Two consequences:
 | Domain | `src/features/*` | schemas, form contracts, cart, admin actions | lib, services |
 | Application | `src/server/services` | business rules, caching, invalidation | repositories, lib |
 | Data access | `src/server/repositories` | Prisma queries only, no policy | lib/db |
-| Infrastructure | `src/server/storage`, `src/server/outbox`, `src/lib/db` | MariaDB, object storage, queues | — |
+| Infrastructure | `src/server/storage`, `src/server/outbox`, `src/lib/db` | Postgres, object storage, queues | — |
 
 The rule that keeps this honest: **repositories never import services, and
 services never import React.** That is what makes `placeOrder()` callable from a
@@ -198,7 +198,7 @@ same services.
 
 ### Admin authentication
 
-Sessions are **opaque random tokens in the database**, not JWTs:
+Sessions are **opaque random tokens in Postgres**, not JWTs:
 
 - revocable — "sign out everywhere" is a single `UPDATE`
 - a database leak yields SHA-256 digests, not usable credentials
@@ -333,10 +333,11 @@ survive a busy Saturday.
 
 Levers already in the code:
 
-- **`DATABASE_POOL_MAX`** — pool per process, kept small because a fleet
-  multiplies it; each process opens at most this many connections to MariaDB.
-- **Single-endpoint or split URLs** — `DIRECT_URL` lets migrations bypass a
-  pooler on hosts that require it, while the app always uses `DATABASE_URL`.
+- **`DATABASE_POOL_MAX`** — pool per process, kept small because every instance
+  and every build/start worker multiplies it; the pool's total must fit the
+  database plan's connection limit.
+- **Direct or split URLs** — `DIRECT_URL` lets migrations bypass a pooler on
+  hosts that use one, while the app always uses `DATABASE_URL`.
 - **`s-maxage` + `stale-while-revalidate`** — a cache miss for one visitor is not
   a cache miss for thousands.
 - **Outbox** — third-party latency is off the request path entirely, so a slow
@@ -378,7 +379,7 @@ realistic threat).
 | Layer | Tool | What it proves |
 | --- | --- | --- |
 | Unit (`tests/unit`) | Vitest | money cannot drift; slugs, phones, cursors, idempotency keys, rate limiting, password hashing |
-| Integration (`tests/integration`) | Vitest + real MariaDB | pricing is server-side, lead time enforced, stock honoured, idempotency real, outbox written transactionally |
+| Integration (`tests/integration`) | Vitest + real Postgres | pricing is server-side, lead time enforced, stock honoured, idempotency real, outbox written transactionally |
 | HTTP smoke | Node script | the deployed app: pages, headers, auth gating, media, the whole order flow |
 
 Integration tests run against a real database on purpose: the property that

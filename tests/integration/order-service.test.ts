@@ -8,7 +8,7 @@ import { uniqueSlug } from "@/lib/slug";
 /**
  * Order service integration tests.
  *
- * These run against a real MariaDB because the behaviour that matters most —
+ * These run against a real Postgres because the behaviour that matters most —
  * that a client cannot dictate prices — is only meaningful when the catalog is
  * actually being read. A mocked repository would happily "prove" the wrong thing.
  *
@@ -97,7 +97,7 @@ afterAll(async () => {
     // run would leave a growing pile behind. Clear both.
     const events = await db.outboxEvent.findMany({
       where: {
-        OR: createdOrderIds.map((id) => ({ payload: { path: "$.orderId", equals: id } })),
+        OR: createdOrderIds.map((id) => ({ payload: { path: ["orderId"], equals: id } })),
       },
       select: { id: true },
     });
@@ -315,8 +315,7 @@ describe("placeOrder", () => {
     createdOrderIds.push(result.value.id);
 
     const event = await db.outboxEvent.findFirst({
-      // MySQL/MariaDB JSON filters take a JSONPath string, not a key array.
-      where: { type: "order.created", payload: { path: "$.orderId", equals: result.value.id } },
+      where: { type: "order.created", payload: { path: ["orderId"], equals: result.value.id } },
     });
 
     expect(event).not.toBeNull();

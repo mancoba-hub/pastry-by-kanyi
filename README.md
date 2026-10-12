@@ -25,7 +25,7 @@ because the gallery is the product and the business uploads constantly.
 # 1. Install
 npm install
 
-# 2. Start MariaDB (or point DATABASE_URL at your host's database — see below)
+# 2. Start Postgres (or point DATABASE_URL at a managed Postgres — see below)
 docker compose up -d
 
 # 3. Configure
@@ -42,20 +42,26 @@ npm run dev                   # http://localhost:3000
 Seeded staff login: `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from `.env`
 (defaults `kanyi@example.com` / `change-me-before-deploying` — **change this**).
 
-### Database (MariaDB / MySQL)
+### Database (PostgreSQL)
 
-The app talks to MariaDB/MySQL. Compose `DATABASE_URL` from the details your
-host shows in its panel:
+The app talks to PostgreSQL. `docker compose up -d` starts one locally; in
+production point `DATABASE_URL` at any managed Postgres (Render, Neon, Supabase):
 
 ```
-mysql://<db-user>:<db-password>@<db-host>:3306/<db-name>
+postgresql://<db-user>:<db-password>@<db-host>:5432/<db-name>
 ```
 
-Percent-encode special characters in the password (`p@ss` → `p%40ss`); the
-`mariadb://` scheme is accepted as well. `DIRECT_URL` only exists for providers
-that expose a separate endpoint for migrations — with a single endpoint
-(HostAfrica, a VPS) leave it empty and the Prisma CLI falls back to
-`DATABASE_URL`.
+Percent-encode special characters in the password (`p@ss` → `p%40ss`).
+Providers that expose a separate endpoint for migrations — a PgBouncer pooler,
+for example — put it in `DIRECT_URL`, because PgBouncer cannot run DDL in
+transaction mode. With a single endpoint (Render, a VPS) leave it empty and the
+Prisma CLI falls back to `DATABASE_URL`.
+
+`next build` prerenders the gallery and shop pages from the database, so the
+endpoint the build uses must be reachable from the build environment. On Render
+the Blueprint wires in the database's **internal** URL, which both the build and
+the running service can reach; from a developer machine use the **external** URL
+(with `?sslmode=require`).
 
 `prisma migrate dev` (the local-dev command) creates a scratch shadow database,
 so the user must be allowed to `CREATE DATABASE`. Production and hosted panels
@@ -191,8 +197,9 @@ policy — only queries — which keeps them safe to reuse from a future worker.
 
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — system architecture, data
   model, API endpoints, UI architecture, and how each part scales.
-- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — deploying to a VPS (with
-  systemd + nginx), photo storage, migrations, monitoring, and the runbook.
+- **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** — deploying to Render (Blueprint
+  included) or a VPS (systemd + nginx), photo storage, migrations, monitoring,
+  and the runbook.
 
 ---
 
@@ -213,14 +220,13 @@ break instant publishing, which is the whole point of the site.
 At more than one instance, set `REDIS_URL` and swap `createRateLimiter()` for a
 shared implementation; the interface is one method wide for that reason.
 
-**`npm audit` reports high-severity advisories in devDependencies** —
-`deepmerge-ts` and `mysql2` in the Prisma CLI chain, `braces` in the ESLint
-chain. None of them are part of the production bundle: the Prisma CLI only runs
-on a developer machine or CI, and the offered fixes downgrade Prisma to 6 or
-ESLint config, which are breaking changes. The shipped runtime connector
-(`mariadb`, pulled in by `@prisma/adapter-mariadb`) is held at a patched release
-through the `overrides` block in `package.json`; drop the override once the
-adapter raises its own pin.
+**`npm audit` reports high-severity advisories in build-time tooling only** —
+`deepmerge-ts` and `mysql2` in the Prisma CLI chain, `fast-glob`/`micromatch`/
+`braces` in the ESLint chain. None of them are part of the production bundle:
+the Prisma CLI only runs on a developer machine and during Render's build and
+pre-deploy steps, and `mysql2` is never imported by the Postgres app. The
+offered fixes are breaking downgrades (Prisma 6, an outdated
+`eslint-config-next`), so the advisories are accepted and tracked.
 
 **Payments are manual by design.** `placeOrder()` is the only place a total is
 computed, and a `PaymentMethod` enum already models `GATEWAY`, so adding M-Pesa

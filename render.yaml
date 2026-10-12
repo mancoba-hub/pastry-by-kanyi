@@ -1,0 +1,140 @@
+# Render Blueprint for Pastry by Kanyi — https://render.com/docs/blueprint-spec
+#
+# Apply it with Dashboard → New → Blueprint → pick this repo. Render creates:
+#
+#   * pastry-db              — managed PostgreSQL (Frankfurt, same region as the services)
+#   * pastry-by-kanyi        — the Next.js web service, built and served by Render
+#   * pastry-by-kanyi-outbox — a cron job that drains the outbox every 5 minutes
+#
+# Inputs you are prompted for during creation (all `sync: false` below):
+#   NEXT_PUBLIC_WHATSAPP_NUMBER   real number, digits only, no "+"
+#   NEXT_PUBLIC_BUSINESS_PHONE    displayed on the contact page
+#   NEXT_PUBLIC_BUSINESS_EMAIL    displayed on the contact page
+#   NEXT_PUBLIC_INSTAGRAM_HANDLE  without the "@"
+#   SEED_ADMIN_*                  the first staff login, seeded once after the first deploy
+#   S3_* / STORAGE_PUBLIC_BASE_URL  object storage (Cloudflare R2 or S3) — Render's
+#                                   filesystem is ephemeral, so uploads must go to a bucket
+#
+# Everything else — AUTH_SECRET, DATABASE_URL, the business defaults — is wired
+# automatically. `NEXT_PUBLIC_*` values are inlined into the client bundle at
+# build time, so changing one triggers a rebuild (Render does that for you).
+
+databases:
+  - name: pastry-db
+    region: frankfurt
+    plan: starter
+    postgresMajorVersion: "17"
+    # External access stays enabled (Render's default) so the database can also
+    # be reached from a developer machine running `npm run db:seed` against
+    # production. To make it private-network-only, add:
+    #   ipAllowList: []
+
+services:
+  - type: web
+    name: pastry-by-kanyi
+    runtime: node
+    region: frankfurt
+    plan: starter
+    branch: main
+    autoDeployTrigger: commit
+    # `prisma migrate deploy` runs *before* `next build`, because the build
+    # prerenders gallery and shop pages by querying the database — on a fresh
+    # database there are no tables until the migrations have been applied.
+    # Render's build environment reaches the database over the private network.
+    buildCommand: npm ci --no-audit --no-fund && npm run db:deploy && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    # Runs once after the first successful deploy: staff user + demo catalogue.
+    # Drives the real image pipeline, so it also proves the R2/S3 wiring works.
+    initialDeployHook: npm run db:seed
+    envVars:
+      # Node 22 LTS, matching what the app is developed and tested on.
+      - key: NODE_VERSION
+        value: ">=22 <23"
+      # The private-network URL; reachable from the build, the service and the
+      # cron job. Use the External Database URL for manual work from a laptop.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pastry-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      # Update if Render assigns a different subdomain, then redeploy — canonical
+      # URLs, sitemap.xml and WhatsApp link previews all use this value.
+      - key: NEXT_PUBLIC_SITE_URL
+        value: https://pastry-by-kanyi.onrender.com
+      - key: NEXT_PUBLIC_SITE_NAME
+        value: Pastry by Kanyi
+      - key: NEXT_PUBLIC_WHATSAPP_NUMBER
+        sync: false
+      - key: NEXT_PUBLIC_CURRENCY
+        value: ZAR
+      - key: NEXT_PUBLIC_DELIVERY_FEE_CENTS
+        value: "0"
+      - key: NEXT_PUBLIC_BUSINESS_PHONE
+        sync: false
+      - key: NEXT_PUBLIC_BUSINESS_EMAIL
+        sync: false
+      - key: NEXT_PUBLIC_BUSINESS_LOCATION
+        value: Cape Town, South Africa
+      - key: NEXT_PUBLIC_INSTAGRAM_HANDLE
+        sync: false
+      - key: SEED_ADMIN_EMAIL
+        sync: false
+      - key: SEED_ADMIN_PASSWORD
+        sync: false
+      - key: SEED_ADMIN_NAME
+        sync: false
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      # "auto" is Cloudflare R2; use the real region for AWS S3 (e.g. eu-west-1).
+      - key: S3_REGION
+        value: auto
+      # R2 endpoint (https://<account-id>.r2.cloudflarestorage.com); leave empty
+      # for AWS S3.
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      # Public bucket/CDN base URL; also what next.config.ts allows for images.
+      - key: STORAGE_PUBLIC_BASE_URL
+        sync: false
+
+  - type: cron
+    name: pastry-by-kanyi-outbox
+    runtime: node
+    region: frankfurt
+    plan: starter
+    schedule: "*/5 * * * *"
+    # No Next build here: the job only needs the source, its dependencies and
+    # the generated Prisma client (`npm ci` runs `prisma generate` via postinstall).
+    buildCommand: npm ci --no-audit --no-fund
+    startCommand: npm run outbox:drain
+    envVars:
+      - key: NODE_VERSION
+        value: ">=22 <23"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pastry-db
+          property: connectionString
+      # References rather than copies of the web service's values, so there is
+      # one place to change each of them.
+      - key: AUTH_SECRET
+        fromService:
+          type: web
+          name: pastry-by-kanyi
+          envVarKey: AUTH_SECRET
+      - key: NEXT_PUBLIC_SITE_URL
+        fromService:
+          type: web
+          name: pastry-by-kanyi
+          envVarKey: NEXT_PUBLIC_SITE_URL
+      - key: NEXT_PUBLIC_WHATSAPP_NUMBER
+        fromService:
+          type: web
+          name: pastry-by-kanyi
+          envVarKey: NEXT_PUBLIC_WHATSAPP_NUMBER

@@ -9,7 +9,7 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.ts"],
     setupFiles: ["tests/setup.ts"],
-    // Integration tests share one MariaDB database; running files in parallel
+    // Integration tests share one Postgres database; running files in parallel
     // would let one file's cleanup race another's fixtures.
     fileParallelism: false,
     testTimeout: 20_000,

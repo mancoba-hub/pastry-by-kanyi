@@ -186,11 +186,9 @@ export async function listOrders(args: {
       ? {
           AND: [
             {
-              // No `mode: "insensitive"` — MySQL/MariaDB's utf8mb4_unicode_ci
-              // collation makes `contains` case-insensitive by default.
               OR: [
-                { publicRef: { contains: search } },
-                { customerName: { contains: search } },
+                { publicRef: { contains: search, mode: "insensitive" } },
+                { customerName: { contains: search, mode: "insensitive" } },
                 { customerPhone: { contains: search } },
               ],
             },

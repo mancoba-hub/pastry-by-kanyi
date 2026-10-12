@@ -9,15 +9,20 @@ This is a **Next.js server application**, not a static site:
 - **Node.js 20.9+** (Node 22 LTS is what it is built on) running `npm start`
   behind a reverse proxy. The pages, admin area, image pipeline and JSON API all
   need a long-lived Node process — there is no static export mode.
-- A **MariaDB/MySQL database** the app can reach from that process.
+- A **PostgreSQL database** the app can reach — from the build step *and* from
+  the running server. `next build` prerenders the gallery and shop pages from
+  the database, so a database the build environment cannot reach fails the
+  deploy, not just a request.
 - **Persistent disk** only if `STORAGE_DRIVER=local` (single-server setups).
+  Render's filesystem is ephemeral, so anything deployed there needs
+  `STORAGE_DRIVER=s3`.
 
 Shared hosting without Node.js support (a plain PHP cPanel/DirectAdmin plan)
-**cannot host this app** — there is nothing to run the server. Use a **VPS or
-dedicated server**, or any Node/container platform. If the database is on shared
-hosting and the app runs elsewhere, remember that cPanel databases usually
-accept connections only from within the host's own network ("Remote MySQL"
-allowlists exist but are brittle) — a VPS that runs both is the simplest shape.
+**cannot host this app** — there is nothing to run the server. Use **Render**, a
+**VPS**, or any Node/container platform. If the database lives on shared hosting
+and the app runs elsewhere, remember that those databases usually accept
+connections only from within the host's own network ("remote database"
+allowlists exist but are brittle) — a box that runs both is the simplest shape.
 
 ---
 
@@ -25,8 +30,8 @@ allowlists exist but are brittle) — a VPS that runs both is the simplest shape
 
 - [ ] `AUTH_SECRET` is a fresh 32-byte random value (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`)
 - [ ] `NEXT_PUBLIC_SITE_URL` is the real `https://` origin, **no trailing slash**
-- [ ] `DATABASE_URL` is the MariaDB/MySQL connection string from the host's panel (`DIRECT_URL` empty unless your provider exposes separate endpoints)
-- [ ] Storage decided: `STORAGE_DRIVER=s3` with a bucket, or `local` on a server with a persistent disk
+- [ ] `DATABASE_URL` is the PostgreSQL connection string (`DIRECT_URL` empty unless your provider exposes a separate pooled/direct pair; on Render the Blueprint injects both the URL and `AUTH_SECRET` for you)
+- [ ] Storage decided: `STORAGE_DRIVER=s3` with a bucket (required on Render, whose filesystem is ephemeral), or `local` on a server with a persistent disk
 - [ ] `NEXT_PUBLIC_WHATSAPP_NUMBER` is the real number, digits only, no `+`
 - [ ] The seeded staff password has been changed after first login
 - [ ] `npm run db:deploy` has been run against production
@@ -39,35 +44,49 @@ shared on WhatsApp shows a preview card or a bare URL.
 
 ---
 
-## 2. Database (MariaDB / MySQL)
+## 2. Database (PostgreSQL)
 
 ### Connection string
 
 ```
-mysql://<db-user>:<db-password>@<db-host>:3306/<db-name>
+postgresql://<db-user>:<db-password>@<db-host>:5432/<db-name>
 ```
 
-- Compose it from the database section of the host's panel. Percent-encode
-  special characters in the password (`p@ss` → `p%40ss`).
-- `mariadb://` is accepted as well; both mean the same database.
+- Percent-encode special characters in the password (`p@ss` → `p%40ss`); the
+  port can be omitted when it is the default 5432.
+- Render rejects plaintext **external** connections, so append
+  `?sslmode=require` to an external URL. Internal URLs encrypt too.
 - `DIRECT_URL` only exists for providers that expose a separate endpoint for
-  migrations (a pooler that cannot run DDL, for example). With a single
-  endpoint — HostAfrica, a VPS — leave it empty and the Prisma CLI falls back to
-  `DATABASE_URL`.
+  migrations — a PgBouncer pooler that cannot run DDL, for example. With a
+  single endpoint (Render Postgres without pooling, a VPS) leave it empty and
+  the Prisma CLI falls back to `DATABASE_URL`.
 
-### HostAfrica (cPanel / DirectAdmin database)
+### Render Postgres
 
-1. In the panel open **Databases → MySQL/MariaDB Databases**.
-2. Create the database (e.g. `kanyi_pastry`), then a user with a strong
-   password, and grant that user ALL PRIVILEGES on the database.
-3. The database host is `localhost` when the app runs on the same machine; use
-   the hostname from the panel if it differs.
-4. Put the values into `DATABASE_URL`, then run `npm run db:deploy` from the
-   machine that can reach the database (usually the VPS itself).
+`render.yaml` creates the database and wires it in; the dashboard
+(**New → Postgres**) does the same by hand. Its **Info** page shows two URLs:
 
-Panel database users normally cannot `CREATE DATABASE`, so `npm run db:migrate`
-(the dev command that needs a shadow database) does not work against them — use
-`db:deploy`, which applies the committed migration files without a shadow.
+| URL | Reachable from | Used for |
+| --- | --- | --- |
+| **Internal** | Render services in the same region *and their builds* | what the Blueprint injects as `DATABASE_URL` — lowest latency, traffic never leaves Render's private network |
+| **External** | anywhere, your laptop included | running `db:deploy` / `db:seed` from a developer machine |
+
+The build has database access, which is why migrations can run inside the build
+command (see §4) — the same pattern as Render's own
+[Django](https://github.com/render-examples/django) and Rails templates.
+
+External access is enabled by default. To limit the database to the private
+network — after which only Render services and their builds can reach it — add
+this to `render.yaml` and sync:
+
+```yaml
+databases:
+  - name: pastry-db
+    ipAllowList: []
+```
+
+A paid plan is required for anything real: free Render Postgres instances expire
+30 days after creation, have no backups, and cap at 1 GB.
 
 ### Apply migrations
 
@@ -76,32 +95,33 @@ npm run db:deploy        # production: applies pending migrations, never prompts
 npm run db:migrate       # development: creates a migration from schema changes
 ```
 
-`db:deploy` is the only command CI/CD should run. `db:migrate` can generate
-destructive diffs, requires a shadow database, and is for local development.
+`db:deploy` is the only command CI/CD should run — on Render it is part of the
+web service's build command (see §4). `db:migrate` can generate destructive
+diffs, requires a shadow database, and is for local development only.
 
-### Self-hosted MariaDB (Docker)
+### Self-hosted Postgres (Docker)
 
 ```bash
 docker compose up -d
 npm run db:deploy && npm run db:seed
 ```
 
-`docker-compose.yml` maps the host port to **3307** to avoid colliding with a
-MariaDB/MySQL already installed on 3306.
+`docker-compose.yml` maps the host port to **5433** to avoid colliding with a
+Postgres already installed on 5432.
 
 ### Pools and connection limits
 
-`DATABASE_POOL_MAX` (default 5) is the pool size **per process**. Keep the pool
-small enough that every app process together stays under the database account's
-connection cap (shared hosts often allow only 15–30 connections per user).
+`DATABASE_POOL_MAX` (default 5) is the pool size **per process**. Every instance
+and every worker `next build`/`next start` spawns opens its own pool, so keep
+the total (instances × workers × this value) under the plan's connection limit.
 
 ### Migration history
 
-The MySQL schema starts from a single baseline migration
-(`prisma/migrations/20261008073743_init`); the PostgreSQL migrations that
-preceded it are gone from the history. A database that already carries the
-PostgreSQL schema cannot be migrated in place — dump the data as SQL/CSV and
-re-import it after `db:deploy` creates the tables.
+The history is the two PostgreSQL baselines under `prisma/migrations`
+(`20261007072215_init`, `20261007073000_product_image_bytesize`). A database
+left over from the MariaDB detour — or the PostgreSQL schema from before it —
+cannot be migrated in place: dump the data as SQL/CSV and re-import it after
+`db:deploy` creates the tables on a fresh database.
 
 ---
 
@@ -132,7 +152,8 @@ STORAGE_LOCAL_DIR=".uploads"          # relative to the app directory
 
 Files are served through `/api/media/...`. Requirements:
 
-- a **persistent** disk — a HostAfrica VPS qualifies; anything ephemeral does not
+- a **persistent** disk — a VPS qualifies; a Render service's filesystem does
+  not (it is wiped on every deploy, restart and spin-down)
 - **back the folder up** together with the database; photos cannot be
   reconstructed from the database alone
 - the directory must be writable by the Node process, and must survive deploys
@@ -164,17 +185,79 @@ Then:
 2. Grant the credentials only `PutObject` and `DeleteObject` on that bucket.
    The app never lists, so it does not need `ListBucket`.
 
-With S3, uploads go **browser → bucket** via presigned URLs
-(`/api/admin/uploads/presign`), so image bytes never pass through the app server.
-The presign endpoint requires an authenticated `ADMIN` session. With the local
-driver the admin UI posts files through the server instead, which is fine for a
-single box.
+The admin UI currently posts files through a **Server Action** for both drivers,
+so upload bytes pass through the app server on their way to the bucket — fine at
+a bakery's upload volume, and the 15 MB per-file limit sits well inside the
+20 MB Server Action body limit configured in `next.config.ts`. The `s3` driver
+additionally exposes presigned uploads (`/api/admin/uploads/presign`,
+`ADMIN`-only) for a browser-direct path if that volume ever changes. Reads never
+touch the server — images are served straight from `STORAGE_PUBLIC_BASE_URL` —
+so the bucket needs no CORS policy.
 
 ---
 
 ## 4. Deploying the app
 
-### HostAfrica VPS (nginx + Node, most common shape)
+### Render (Blueprint included)
+
+`render.yaml` in the repository root is a complete Blueprint: a Starter web
+service, a PostgreSQL database and a cron job for `outbox:drain`, all in one
+region. Deploying is three steps.
+
+1. Push the repository to GitHub — Render deploys the branch named in the
+   Blueprint (`main`).
+2. In the [Render Dashboard](https://dashboard.render.com): **New → Blueprint**,
+   pick the repository, and apply. You are prompted for the `sync: false` values
+   from `render.yaml`: the WhatsApp number, the business contact details, the
+   `SEED_ADMIN_*` credentials, and the `S3_*` / `STORAGE_PUBLIC_BASE_URL` bucket
+   settings (§3 explains the R2 side).
+3. Wait for the first build. It runs, in order:
+
+   ```
+   npm ci              # installs dependencies; postinstall generates the Prisma client
+   npm run db:deploy   # applies the migrations — the build can reach the database
+   npm run build       # prerenders the gallery and shop from the database
+   ```
+
+   The migrations live in the **build** command on purpose: `next build` reads
+   the database, so the schema has to exist before the build starts — a pre-deploy
+   command would run too late on a fresh database. `prisma migrate deploy` is
+   idempotent, so re-runs are harmless.
+
+   The service then starts (`npm start`), the health check at `GET /api/health`
+   goes green, and the initial deploy hook runs `npm run db:seed` **once**:
+   staff user, demo catalogue, and images pushed through the real storage
+   driver — which is also what proves the bucket wiring works. If that hook
+   fails (wrong bucket credentials, for example), the deploy still succeeds:
+   fix the credentials and run `npm run db:seed` once from the service's
+   **Shell** tab.
+
+Everything else is wired for you: `DATABASE_URL` comes from the database
+(`fromDatabase`, the private-network URL), `AUTH_SECRET` is generated, and the
+cron job references the web service's values instead of duplicating them.
+
+After the first deploy:
+
+- If Render assigned a different subdomain than `pastry-by-kanyi`, update
+  `NEXT_PUBLIC_SITE_URL` in the dashboard and redeploy — canonical URLs,
+  `sitemap.xml` and WhatsApp link previews all use it.
+- Sign in at `/admin/login` with the seeded credentials and **change the
+  password**.
+- Point the real domain at the service under **Settings → Custom Domains**;
+  Render provisions TLS. Then update `NEXT_PUBLIC_SITE_URL` and redeploy.
+
+Notes worth knowing:
+
+- **Region.** The Blueprint uses `frankfurt`. Services and database must share a
+  region for the private network to work. Render has no African region;
+  Frankfurt and London are the closest to South Africa.
+- **Deploys are zero-downtime** — Render builds, health-checks and only then
+  switches traffic (§10 covers rolling back).
+- **Free plan** is a demo-only option: free services sleep after 15 minutes idle,
+  free Postgres expires after 30 days, and cron jobs (like most deploy features)
+  require a paid plan.
+
+### VPS (nginx + Node)
 
 One-time setup on the server (Ubuntu/Debian):
 
@@ -182,12 +265,13 @@ One-time setup on the server (Ubuntu/Debian):
 # Node.js 22 LTS
 curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
 
-# MariaDB, if the database lives on this box
-apt-get install -y mariadb-server && mysql_secure_installation
-# then, in `mariadb`:
-#   CREATE DATABASE pastry CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-#   CREATE USER 'pastry'@'localhost' IDENTIFIED BY '…';
-#   GRANT ALL PRIVILEGES ON pastry.* TO 'pastry'@'localhost';
+# PostgreSQL, if the database lives on this box
+apt-get install -y postgresql
+# then, as the postgres user:
+#   CREATE DATABASE pastry;
+#   CREATE USER pastry WITH PASSWORD '…';
+#   GRANT ALL PRIVILEGES ON DATABASE pastry TO pastry;
+#   GRANT ALL ON SCHEMA public TO pastry;
 
 # nginx + TLS
 apt-get install -y nginx certbot python3-certbot-nginx
@@ -209,7 +293,7 @@ Keep the process alive with a systemd unit instead of a terminal. `/etc/systemd/
 ```ini
 [Unit]
 Description=Pastry by Kanyi (Next.js)
-After=network.target mariadb.service
+After=network.target postgresql.service
 
 [Service]
 Type=simple
@@ -261,47 +345,40 @@ certbot --nginx -d pastrybykanyi.com -d www.pastrybykanyi.com
 
 Then open only 80/443 in the firewall — port 3000 stays on loopback.
 
-Two HostAfrica-specific notes:
+Two notes for a self-hosted database:
 
 - With `STORAGE_DRIVER=local`, point the uploads directory at an **absolute
   path outside the git checkout** — `STORAGE_LOCAL_DIR="/srv/data/uploads"` —
   so redeploys cannot wipe photos.
-- If you want to keep the database account from your old shared plan instead of
-  creating one on the VPS, add the VPS IP under **Remote MySQL** in the panel;
-  otherwise create the database in the VPS's own MariaDB (the one-time setup
-  above) and use `localhost` as the host.
+- With the database on the same box, `DATABASE_URL` uses `localhost` and no
+  TLS. A managed database elsewhere needs its external URL, usually with
+  `?sslmode=require`.
 
 Add the cron entry from §5 (`outbox:drain`) once the site is up.
 
-### Vercel or another serverless/Node platform
+### Other Node/container platforms (Fly.io, Railway, Vercel, …)
 
-1. Import the repository.
-2. Add every variable from `.env.example`.
-3. Build command `npm run build`; install command `npm install`.
-4. **Do not** add a build-time migration step unless you are certain the database
-   is reachable from the build environment — prefer a release step or a manual
-   `npm run db:deploy`.
-5. Serverless platforms need `STORAGE_DRIVER=s3` — the filesystem is ephemeral.
-
-Migrations and seeds are not run automatically. Run them deliberately.
-
-### Container host (Fly.io, Railway, Render, …)
-
-A standalone Next server is enough; no Dockerfile is shipped because none of the
-providers need one, but the shape is:
+A standalone Next server is enough; no Dockerfile is shipped because none of
+these providers need one, but the shape is:
 
 ```
-npm ci
-npm run build
+npm ci                 # postinstall generates the Prisma client
 npm run db:deploy      # release step, once per deploy
+npm run build
 npm start              # PORT from the environment
 ```
 
-Requirements:
+Requirements and caveats:
 
 - Node.js **20.9+** (Next 16 minimum). Node 22 LTS is what this was built on.
-- A writable filesystem is **not** required when `STORAGE_DRIVER=s3`.
+- The database must be reachable from the **build** environment as well as at
+  runtime — `next build` queries it. Platforms that isolate builds from their
+  private network need a database that is reachable over the public internet
+  (or a build runner you control).
+- Serverless platforms need `STORAGE_DRIVER=s3` — the filesystem is ephemeral.
 - `sharp` has prebuilt binaries for linux-x64/arm64; no build toolchain needed.
+- Migrations and seeds are not run automatically, and `outbox:drain` needs a
+  scheduler (§5). Run them deliberately.
 
 ### Health checks
 
@@ -314,7 +391,12 @@ serving errors.
 
 ## 5. Scheduled jobs
 
-One cron entry (`crontab -e` as the service user):
+On Render the Blueprint provisions a **cron job** (`pastry-by-kanyi-outbox`)
+that runs `npm run outbox:drain` every five minutes, so there is nothing to
+schedule by hand. Render builds it once per deploy and bills it per second of
+runtime; cron jobs are not available on the free plan.
+
+On a VPS, one cron entry (`crontab -e` as the service user):
 
 ```cron
 */5 * * * * cd /srv/pastry-by-kanyi && /usr/bin/npm run outbox:drain >> /var/log/pastry-outbox.log 2>&1
@@ -347,6 +429,11 @@ curl -s  https://your-domain/robots.txt           # should NOT be "Disallow: /"
 ```
 
 Then sign in at `/admin/login` and **change the password immediately**.
+
+On Render, steps 1 and 2 happen automatically: `npm run db:deploy` is part of the
+web service's build command, and `npm run db:seed` runs once as the service's
+initial deploy hook. Both commands are also safe to run by hand from a local
+checkout pointed at the production `DATABASE_URL` (the external URL).
 
 `npm run db:seed` is idempotent: re-running updates catalog rows in place and
 leaves an existing password hash untouched, so it will never silently reset a
@@ -385,17 +472,17 @@ Worth alerting on:
 | `media.traversal.blocked` | someone probing the media route |
 | `/api/health` returning 503 | database unreachable |
 
-Useful queries (camelCase identifiers need backticks, `Order` is reserved):
+Useful queries (camelCase identifiers need double quotes, `Order` is reserved):
 
 ```sql
 -- orders that never got notified
-SELECT id, type, attempts, lastError FROM `OutboxEvent` WHERE status = 'FAILED';
+SELECT id, type, attempts, "lastError" FROM "OutboxEvent" WHERE status = 'FAILED';
 
 -- today's orders
-SELECT status, count(*) FROM `Order` WHERE createdAt >= CURRENT_DATE GROUP BY status;
+SELECT status, count(*) FROM "Order" WHERE "createdAt" >= CURRENT_DATE GROUP BY status;
 
 -- storage used by uploaded images
-SELECT ROUND(SUM(byteSize) / 1024 / 1024, 1) AS megabytes FROM `CakeImage`;
+SELECT ROUND(SUM("byteSize") / 1024.0 / 1024.0, 1) AS megabytes FROM "CakeImage";
 ```
 
 ---
@@ -403,8 +490,8 @@ SELECT ROUND(SUM(byteSize) / 1024 / 1024, 1) AS megabytes FROM `CakeImage`;
 ## 9. Backups
 
 Enable the provider's automated daily backups and keep the dumps off the server.
-On a VPS, `mysqldump` on a cron is the straightforward option; shared-panel
-databases have a backup feature in the control panel.
+Paid Render Postgres plans include automated backups and point-in-time recovery
+in the dashboard; on a VPS, `pg_dump` on a cron is the straightforward option.
 
 What to keep:
 
@@ -420,7 +507,8 @@ Test a restore once, before you need one.
 
 ## 10. Rolling back
 
-The app is stateless, so redeploy the previous build.
+The app is stateless, so redeploy the previous build — on Render that is
+**Deploys → Rollback** to the last good deploy.
 
 If the bad deploy included a migration, the schema is now ahead of the code.
 Prefer a **forward fix** — additive migrations are written to be backward

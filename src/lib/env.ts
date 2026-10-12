@@ -13,9 +13,9 @@ const serverSchema = z.object({
 
   DATABASE_URL: z
     .string()
-    .min(1, "DATABASE_URL is required (MariaDB/MySQL connection string)")
-    .refine((v) => v.startsWith("mysql://") || v.startsWith("mariadb://"), {
-      message: "DATABASE_URL must be a mysql:// or mariadb:// URL",
+    .min(1, "DATABASE_URL is required (PostgreSQL connection string)")
+    .refine((v) => v.startsWith("postgres://") || v.startsWith("postgresql://"), {
+      message: "DATABASE_URL must be a postgres:// or postgresql:// URL",
     }),
 
   AUTH_SECRET: z
@@ -36,9 +36,10 @@ const serverSchema = z.object({
   ORDER_RATE_LIMIT_PER_HOUR: z.coerce.number().int().positive().default(10),
 
   /**
-   * Max connections per process. Keep this small on shared/managed database
-   * accounts with a per-user connection cap. Raise it only for a dedicated
-   * database with headroom, e.g. a self-hosted instance serving a few
+   * Max connections per process. Every service instance — and every worker
+   * process `next build`/`next start` spawns — opens its own pool, so keep this
+   * comfortably below the database plan's connection limit. Raise it only for a
+   * dedicated database with headroom, e.g. a self-hosted instance serving a few
    * long-lived containers.
    */
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).max(50).default(5),
