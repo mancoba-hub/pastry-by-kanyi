@@ -214,23 +214,27 @@ region. Deploying is three steps.
 3. Wait for the first build. It runs, in order:
 
    ```
-   npm ci              # installs dependencies; postinstall generates the Prisma client
-   npm run db:deploy   # applies the migrations — the build can reach the database
-   npm run build       # prerenders the gallery and shop from the database
+   npm ci                    # installs dependencies; postinstall generates the Prisma client
+   npm run db:deploy         # applies the migrations — the build can reach the database
+   npm run db:seed-if-empty  # fills an empty catalogue, then gets out of the way
+   npm run build             # prerenders the gallery and shop from the database
    ```
 
-   The migrations live in the **build** command on purpose: `next build` reads
-   the database, so the schema has to exist before the build starts — a pre-deploy
-   command would run too late on a fresh database. `prisma migrate deploy` is
-   idempotent, so re-runs are harmless.
+   Both database steps live in the **build** command on purpose:
 
-   The service then starts (`npm start`), the health check at `GET /api/health`
-   goes green, and the initial deploy hook runs `npm run db:seed` **once**:
-   staff user, demo catalogue, and images pushed through the real storage
-   driver — which is also what proves the bucket wiring works. If that hook
-   fails (wrong bucket credentials, for example), the deploy still succeeds:
-   fix the credentials and run `npm run db:seed` once from the service's
-   **Shell** tab.
+   - `next build` reads the database, so the schema has to exist first — a
+     pre-deploy command would run too late on a fresh database.
+     `prisma migrate deploy` is idempotent, so re-runs are harmless.
+   - Cache Components require `generateStaticParams` to return at least one
+     result, so a database with **no cakes or no products makes the build fail**
+     (`/shop/[slug]`, `/gallery/[slug]`). `db:seed-if-empty` fills whichever
+     collection is still empty and skips the rest, so it seeds a fresh database
+     once and never resets rows the owner has edited — which is why the plain
+     `db:seed` (which resets the demo rows in place) is *not* what runs here.
+
+   The seed drives the real image pipeline, so the build also proves the bucket
+   wiring works. The service then starts (`npm start`) and the health check at
+   `GET /api/health` goes green.
 
 Everything else is wired for you: `DATABASE_URL` comes from the database
 (`fromDatabase`, the private-network URL), `AUTH_SECRET` is generated, and the
@@ -433,10 +437,9 @@ curl -s  https://your-domain/robots.txt           # should NOT be "Disallow: /"
 
 Then sign in at `/admin/login` and **change the password immediately**.
 
-On Render, steps 1 and 2 happen automatically: `npm run db:deploy` is part of the
-web service's build command, and `npm run db:seed` runs once as the service's
-initial deploy hook. Both commands are also safe to run by hand from a local
-checkout pointed at the production `DATABASE_URL` (the external URL).
+On Render, steps 1 and 2 happen automatically in the web service's build command
+(`db:deploy` then `db:seed-if-empty`). Both are also safe to run by hand from a
+local checkout pointed at the production `DATABASE_URL` (the external URL).
 
 `npm run db:seed` is idempotent: re-running updates catalog rows in place and
 leaves an existing password hash untouched, so it will never silently reset a

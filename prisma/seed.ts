@@ -17,6 +17,13 @@ import { storage } from "../src/server/storage";
  *
  * Idempotent: re-running updates catalog rows in place and leaves existing
  * images alone. Run with `npm run db:seed`.
+ *
+ * `--if-empty` (`npm run db:seed-if-empty`) skips whichever collection already
+ * has rows. A build step wants exactly that: it only ever fills a fresh
+ * database — without it, every deploy would reset the demo rows to their seed
+ * values. Next 16's Cache Components also require `generateStaticParams` to
+ * return at least one result, so a database with no cakes or no products fails
+ * `next build`; this flag is what makes a first deploy work.
  */
 
 type SeedCake = {
@@ -227,6 +234,8 @@ async function attachImage(args: {
 }
 
 async function main() {
+  const onlyIfEmpty = process.argv.includes("--if-empty");
+
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "kanyi@example.com").toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "change-me-before-deploying";
   const adminName = process.env.SEED_ADMIN_NAME ?? "Kanyi";
@@ -250,8 +259,9 @@ async function main() {
     console.log("   owner account already existed — password left unchanged");
   }
 
-  console.log("→ seeding cakes");
-  for (const cake of SEED_CAKES) {
+  const cakesExist = onlyIfEmpty && (await db.cake.count()) > 0;
+  console.log(cakesExist ? "→ cakes already present — skipped (--if-empty)" : "→ seeding cakes");
+  for (const cake of cakesExist ? [] : SEED_CAKES) {
     const bakedAt = new Date(Date.now() - cake.daysAgo * 24 * 60 * 60 * 1000);
 
     const row = await db.cake.upsert({
@@ -297,8 +307,9 @@ async function main() {
     console.log(`   ${cake.slug}`);
   }
 
-  console.log("→ seeding products");
-  for (const product of SEED_PRODUCTS) {
+  const productsExist = onlyIfEmpty && (await db.product.count()) > 0;
+  console.log(productsExist ? "→ products already present — skipped (--if-empty)" : "→ seeding products");
+  for (const product of productsExist ? [] : SEED_PRODUCTS) {
     const row = await db.product.upsert({
       where: { slug: product.slug },
       create: {

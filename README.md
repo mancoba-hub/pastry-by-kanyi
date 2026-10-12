@@ -81,6 +81,7 @@ usually run `npm run db:deploy` instead, which needs no such rights.
 | `npm run db:migrate` | Create and apply a migration (development) |
 | `npm run db:deploy` | Apply pending migrations (production) |
 | `npm run db:seed` | Seed staff user, demo bakes and shop items |
+| `npm run db:seed-if-empty` | Same, but skips collections that already have rows (what the Render build runs) |
 | `npm run db:studio` | Prisma Studio |
 | `npm run outbox:drain` | Process queued side effects (run on a schedule) |
 

@@ -42,16 +42,16 @@ services:
     plan: starter
     branch: main
     autoDeployTrigger: commit
-    # `prisma migrate deploy` runs *before* `next build`, because the build
-    # prerenders gallery and shop pages by querying the database — on a fresh
-    # database there are no tables until the migrations have been applied.
-    # Render's build environment reaches the database over the private network.
-    buildCommand: npm ci --no-audit --no-fund && npm run db:deploy && npm run build
+    # The build runs, in order: migrations (a fresh database has no tables),
+    # then `db:seed-if-empty`, then the Next build. The seed step is not
+    # optional: Cache Components require `generateStaticParams` to return at
+    # least one result, so with no cakes or products in the database the build
+    # fails. `--if-empty` fills only collections that are still empty, so a
+    # normal deploy never resets rows the owner has edited. Render's build
+    # environment reaches the database over the private network.
+    buildCommand: npm ci --no-audit --no-fund && npm run db:deploy && npm run db:seed-if-empty && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
-    # Runs once after the first successful deploy: staff user + demo catalogue.
-    # Drives the real image pipeline, so it also proves the R2/S3 wiring works.
-    initialDeployHook: npm run db:seed
     envVars:
       # Node 22 LTS, matching what the app is developed and tested on.
       - key: NODE_VERSION

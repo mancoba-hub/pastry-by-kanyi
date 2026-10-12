@@ -15,6 +15,7 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
+    "db:seed-if-empty": "tsx prisma/seed.ts --if-empty",
     "db:studio": "prisma studio",
     "db:reset": "prisma migrate reset",
     "outbox:drain": "tsx scripts/drain-outbox.ts"
